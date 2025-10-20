@@ -1,47 +1,105 @@
 {% extends 'tracking/base.html' %}
+{% load crispy_forms_tags %}
 
 {% block title %}Add Maintenance Record{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
     <h2>{% if form.instance.pk %}Edit{% else %}Add{% endif %} Maintenance Record</h2>
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         
-        <h4>Maintenance Details</h4>
-        {{ form.as_p }}
-
-        <h4>Maintenance Items</h4>
-        {{ item_formset.management_form }}
-        <div id="items">
-            {% for form in item_formset %}
-            <div class="form-row">
-                {{ form.as_p }}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Maintenance Details</h4>
             </div>
-            {% endfor %}
+            <div class="card-body">
+                {{ form|crispy }}
+            </div>
         </div>
 
-        <button type="submit" class="btn btn-primary">Save Maintenance Record</button>
-        <a href="{% url 'maintenance-list' %}" class="btn btn-secondary">Cancel</a>
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Maintenance Items</h4>
+            </div>
+            <div class="card-body">
+                {{ item_formset.management_form }}
+                <div id="items">
+                    {% for form in item_formset %}
+                    <div class="form-row border-bottom pb-3 mb-3">
+                        {{ form|crispy }}
+                        {% if not forloop.first %}
+                        <button type="button" class="btn btn-danger btn-sm remove-item mt-2">Remove Item</button>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="button" class="btn btn-success mt-3" id="add-item">Add Item</button>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">Save Maintenance Record</button>
+            <a href="{% url 'maintenance_list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
     </form>
 </div>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        const addItemBtn = document.createElement("button");
-        addItemBtn.innerText = "Add Item";
-        addItemBtn.classList.add("btn", "btn-success", "mt-3");
-        document.getElementById("items").appendChild(addItemBtn);
+        const itemsContainer = document.getElementById("items");
+        const addItemBtn = document.getElementById("add-item");
+        const totalFormsInput = document.getElementById("id_items-TOTAL_FORMS");
 
         addItemBtn.addEventListener("click", function(e) {
             e.preventDefault();
-            const totalForms = document.getElementById("id_items-TOTAL_FORMS");
-            const formCount = parseInt(totalForms.value);
+            const formCount = parseInt(totalFormsInput.value);
             const newForm = document.querySelector(".form-row").cloneNode(true);
-            newForm.querySelectorAll("input").forEach(input => input.value = "");
-            totalForms.value = formCount + 1;
-            document.getElementById("items").appendChild(newForm);
+            
+            // Update form index
+            newForm.innerHTML = newForm.innerHTML.replaceAll(
+                /-(\d+)-/g,
+                function(match, p1) {
+                    return `-${formCount}-`;
+                }
+            );
+
+            // Clear input values
+            newForm.querySelectorAll("input").forEach(input => {
+                input.value = "";
+                input.name = input.name.replace(/-\d+-/, `-${formCount}-`);
+                input.id = input.id.replace(/-\d+-/, `-${formCount}-`);
+            });
+
+            // Add remove button
+            const removeBtn = document.createElement("button");
+            removeBtn.innerText = "Remove Item";
+            removeBtn.className = "btn btn-danger btn-sm remove-item mt-2";
+            removeBtn.type = "button";
+            newForm.appendChild(removeBtn);
+
+            itemsContainer.appendChild(newForm);
+            totalFormsInput.value = formCount + 1;
         });
+
+        // Event delegation for remove buttons
+        itemsContainer.addEventListener("click", function(e) {
+            if (e.target.classList.contains("remove-item")) {
+                e.target.closest(".form-row").remove();
+                updateFormIndices();
+            }
+        });
+
+        function updateFormIndices() {
+            const forms = itemsContainer.querySelectorAll(".form-row");
+            totalFormsInput.value = forms.length;
+            forms.forEach((form, index) => {
+                form.innerHTML = form.innerHTML.replaceAll(
+                    /-\d+-/g,
+                    `-${index}-`
+                );
+            });
+        }
     });
 </script>
 {% endblock %}

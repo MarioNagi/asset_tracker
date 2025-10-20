@@ -1,0 +1,20 @@
+# Essential packages to run the Asset Tracker application
+Django==5.0.6
+pymysql==1.1.0
+django-allauth==0.63.3
+django-crispy-forms==2.3
+crispy-bootstrap5==2024.10
+django-widget-tweaks==1.5.0
+django-admin-interface==0.28.8
+django-colorfield==0.11.0
+pandas==2.2.2
+xlsxwriter==3.2.0
+openpyxl==3.1.5
+celery==5.3.4
+django-celery-beat==2.6.0
+redis==5.0.1
+Pillow==10.4.0
+pdfplumber>=0.7.0
+PyPDF2>=3.0.0
+python-dateutil==2.8.2
+pytz==2023.3

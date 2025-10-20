@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>URGENT: Service Overdue - {{ car.rego }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: #dc3545;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        .urgent {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            color: #721c24;
+        }
+        .car-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .car-info h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .odometer-info {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+        }
+        .odometer-box {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+            flex: 1;
+            margin: 0 10px;
+        }
+        .odometer-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #dc3545;
+        }
+        .odometer-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        .immediate-action {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #6c757d;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚨 URGENT: SERVICE OVERDUE</h1>
+            <p>Immediate attention required</p>
+        </div>
+
+        <p>Hello {{ user_name }},</p>
+
+        <div class="urgent">
+            <strong>URGENT:</strong> Your vehicle has exceeded its scheduled service interval and requires immediate attention.
+        </div>
+
+        <div class="car-info">
+            <h3>Vehicle Information</h3>
+            <p><strong>Vehicle:</strong> {{ car.make }} {{ car.model }}</p>
+            <p><strong>Registration:</strong> {{ car.rego }}</p>
+            {% if car.assigned_user %}
+            <p><strong>Assigned to:</strong> {{ car.assigned_user.get_full_name }}</p>
+            {% endif %}
+        </div>
+
+        <div class="odometer-info">
+            <div class="odometer-box">
+                <div class="odometer-value">{{ current_odometer|floatformat:0 }}</div>
+                <div class="odometer-label">Current Odometer (km)</div>
+            </div>
+            <div class="odometer-box">
+                <div class="odometer-value">{{ service_odometer|floatformat:0 }}</div>
+                <div class="odometer-label">Service Was Due At (km)</div>
+            </div>
+            <div class="odometer-box">
+                <div class="odometer-value">{{ current_odometer|add:"-"|add:service_odometer|floatformat:0 }}</div>
+                <div class="odometer-label">Kilometers Overdue</div>
+            </div>
+        </div>
+
+        <div class="immediate-action">
+            <h4>IMMEDIATE ACTION REQUIRED</h4>
+            <p><strong style="color: #dc3545;">This vehicle is overdue for service and should be taken off the road until serviced.</strong></p>
+            <ul>
+                <li><strong>Do not drive this vehicle</strong> until it has been serviced</li>
+                <li>Contact your service provider immediately</li>
+                <li>Schedule an emergency service appointment</li>
+                <li>Update the service odometer after completing the service</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p>This is an automated notification from Koinonia Enterprises Asset Tracker.</p>
+            <p>Please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+</html>

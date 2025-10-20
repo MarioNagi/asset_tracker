@@ -1,4 +1,3 @@
-
 {% extends 'tracking/base.html' %}
 {% load custom_filters %}
 {% block title %}Maintenance Records{% endblock %}
@@ -6,13 +5,45 @@
 {% block content %}
 <div class="container mt-5">
     <h2>Maintenance Records</h2>
+    
+    <div class="d-flex justify-content-between mb-3">
+        <a href="{% url 'maintenance_add' %}" class="btn btn-primary">Add Maintenance Record</a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5 class="mb-0">Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="rego" class="form-label">Filter by Car (Rego)</label>
+                    <select name="rego" id="rego" class="form-select">
+                        <option value="">All Cars</option>
+                        {% for rego in regos %}
+                        <option value="{{ rego }}" {% if request.GET.rego == rego %}selected{% endif %}>
+                            {{ rego }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Apply Filter</button>
+                    <a href="{% url 'maintenance_list' %}" class="btn btn-secondary">Clear Filter</a>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <table class="table table-striped mt-3">
         <thead>
             <tr>
                 <th>Car</th>
-                <th>Date</th>
-                <th>Mechanic Notes</th>
+                <th>Service Date</th>
+                <th>Service Type</th>
+                <th>Service Provider</th>
+                <th>Description</th>
                 <th>Items</th>
                 <th>Total Cost</th>
                 <th>Actions</th>
@@ -22,24 +53,26 @@
             {% for record in maintenance_records %}
             <tr>
                 <td>{{ record.car.rego }}</td>
-                <td>{{ record.last_service_date }}</td>
-                <td>{{ record.mechanic_notes }}</td>
+                <td>{{ record.service_date }}</td>
+                <td>{{ record.get_service_type_display }}</td>
+                <td>{{ record.service_provider }}</td>
+                <td>{{ record.description|truncatewords:20 }}</td>
                 <td>
-                    <ul>
-                        {% for item in record.items.all %}
-                        <li>{{ item.description }} - ${{ item.cost }}</li>
-                        {% endfor %}
+                    <ul class="list-unstyled">
+                    {% for item in record.items.all %}
+                        <li>{{ item.description }} - ${{ item.unit_cost }}</li>
+                    {% endfor %}
                     </ul>
                 </td>
-                <td>${{ record.items.all|sum_attribute:'cost' }}</td>
+                <td>${{ record.total_cost }}</td>
                 <td>
-                    <a href="{% url 'maintenance-edit' record.pk %}" class="btn btn-sm btn-warning">Edit</a>
-                    <a href="{% url 'maintenance-delete' record.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                    <a href="{% url 'maintenance_edit' record.pk %}" class="btn btn-sm btn-warning">Edit</a>
+                    <a href="{% url 'maintenance_delete' record.pk %}" class="btn btn-sm btn-danger">Delete</a>
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="6" class="text-center">No maintenance records found.</td>
+                <td colspan="8" class="text-center">No maintenance records found.</td>
             </tr>
             {% endfor %}
         </tbody>

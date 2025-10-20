@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container mt-5">
     <h2>Users</h2>
-    <a href="{% url 'user-add' %}" class="btn btn-primary mb-3">Add User</a>
+    <a href="{% url 'user_add' %}" class="btn btn-primary mb-3">Add User</a>
     <table class="table table-striped">
         <thead>
             <tr>
@@ -24,8 +24,8 @@
                 <td>{{ user.first_name }}</td>
                 <td>{{ user.last_name }}</td>
                 <td>
-                    <a href="{% url 'user-edit' user.pk %}" class="btn btn-sm btn-warning">Edit</a>
-                    <a href="{% url 'user-delete' user.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                    <a href="{% url 'user_edit' user.pk %}" class="btn btn-sm btn-warning">Edit</a>
+                    <a href="{% url 'user_delete' user.pk %}" class="btn btn-sm btn-danger">Delete</a>
                 </td>
             </tr>
             {% empty %}

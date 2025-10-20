@@ -1,0 +1,396 @@
+{% extends 'tracking/base.html' %}
+{% load fleet_extras %}
+{% block title %}Fleet Analytics{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Filters -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5 class="mb-0">Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="rego" class="form-label">Filter by Car (Rego)</label>
+                    <select name="rego" id="rego" class="form-select">
+                        <option value="">All Cars</option>
+                        {% for rego in regos %}
+                        <option value="{{ rego }}" {% if request.GET.rego == rego %}selected{% endif %}>
+                            {{ rego }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Apply Filter</button>
+                    <a href="{% url 'fleet_analytics' %}" class="btn btn-secondary">Clear Filter</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Fleet Analytics</h2>
+        <div class="btn-group">
+            <div class="dropdown me-2">
+                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    Export Monthly Report
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{% url 'generate_report' %}?type=excel&period=monthly">Excel</a></li>
+                    <li><a class="dropdown-item" href="{% url 'generate_report' %}?type=csv&period=monthly">CSV</a></li>
+                </ul>
+            </div>
+            <div class="dropdown">
+                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    Export Yearly Report
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{% url 'generate_report' %}?type=excel&period=yearly">Excel</a></li>
+                    <li><a class="dropdown-item" href="{% url 'generate_report' %}?type=csv&period=yearly">CSV</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fleet Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Vehicles</h5>
+                    <h2>{{ total_cars }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Maintenance Cost (YTD)</h5>
+                    <h2>${{ total_maintenance_cost|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Fuel Cost (YTD)</h5>
+                    <h2>${{ total_fuel_cost|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Service Due</h5>
+                    <h2>{{ service_due_cars|length }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Status Overview -->
+    {% if service_due_cars %}
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white">
+            <h4>Vehicles Requiring Service Attention</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Vehicle</th>
+                            <th>Assigned User</th>
+                            <th>Current Odometer</th>
+                            <th>Service Due At</th>
+                            <th>KM Until/Overdue</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for car in service_due_cars %}
+                        <tr>
+                            <td>{{ car.rego }} ({{ car.make }} {{ car.model }})</td>
+                            <td>{{ car.assigned_user.get_full_name|default:"Unassigned" }}</td>
+                            <td>{{ car.current_odometer|floatformat:0 }} km</td>
+                            <td>{{ car.service_odometer|floatformat:0 }} km</td>
+                            <td>
+                                {% if car.is_service_due_by_km %}
+                                    <span class="text-danger fw-bold">{{ car.current_odometer|add:"-"|add:car.service_odometer|floatformat:0 }} km overdue</span>
+                                {% elif car.is_service_approaching %}
+                                    <span class="text-warning fw-bold">{{ car.km_until_service|floatformat:0 }} km remaining</span>
+                                {% else %}
+                                    <span class="text-success">{{ car.km_until_service|floatformat:0 }} km remaining</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if car.is_service_due_by_km %}
+                                    <span class="badge bg-danger">OVERDUE</span>
+                                {% elif car.is_service_approaching %}
+                                    <span class="badge bg-warning text-dark">DUE SOON</span>
+                                {% else %}
+                                    <span class="badge bg-success">OK</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Fleet Odometer Overview -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Fleet Odometer & Service Overview</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Vehicle</th>
+                            <th>Assigned User</th>
+                            <th>Current Odometer</th>
+                            <th>Service Due At</th>
+                            <th>KM Until Service</th>
+                            <th>Service Status</th>
+                            <th>Last Service KM</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for car in cars %}
+                        <tr>
+                            <td>{{ car.rego }} ({{ car.make }} {{ car.model }})</td>
+                            <td>{{ car.assigned_user.get_full_name|default:"Unassigned" }}</td>
+                            <td>{{ car.current_odometer|floatformat:0 }} km</td>
+                            <td>{{ car.service_odometer|floatformat:0 }} km</td>
+                            <td>
+                                {% if car.is_service_due_by_km %}
+                                    <span class="text-danger fw-bold">-{{ car.current_odometer|add:"-"|add:car.service_odometer|floatformat:0 }} km</span>
+                                {% else %}
+                                    <span class="text-success">{{ car.km_until_service|floatformat:0 }} km</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if car.is_service_due_by_km %}
+                                    <span class="badge bg-danger">OVERDUE</span>
+                                {% elif car.is_service_approaching %}
+                                    <span class="badge bg-warning text-dark">DUE SOON</span>
+                                {% else %}
+                                    <span class="badge bg-success">OK</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ car.last_service_km|default:"-" }} km</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vehicle Cost Analysis -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h4>Monthly Cost Breakdown</h4>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyMaintenanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h4>Cost Per Vehicle (YTD)</h4>
+                </div>
+                <div class="card-body">
+                    <canvas id="costPerVehicleChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fuel Efficiency Analysis -->
+    {% if cars_fuel_data %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Fuel Efficiency Analysis</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Vehicle</th>
+                            <th>Current Efficiency</th>
+                            <th>Average Efficiency</th>
+                            <th>Best Efficiency</th>
+                            <th>Monthly Cost</th>
+                            <th>Trend</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for car in cars_fuel_data %}
+                        <tr>
+                            <td>{{ car.rego }}</td>
+                            <td>{{ car.current_efficiency|floatformat:1 }} L/100km</td>
+                            <td>{{ car.avg_efficiency|floatformat:1 }} L/100km</td>
+                            <td>{{ car.best_efficiency|floatformat:1 }} L/100km</td>
+                            <td>${{ car.monthly_fuel_cost|floatformat:2 }}</td>
+                            <td>
+                                {% calculate_efficiency_change car.current_efficiency car.previous_efficiency as efficiency_change %}
+                                {% if efficiency_change != "N/A" %}
+                                    {% if "-" in efficiency_change %}
+                                        <span class="text-success">{{ efficiency_change }}</span>
+                                    {% else %}
+                                        <span class="text-danger">{{ efficiency_change }}</span>
+                                    {% endif %}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Tire Status -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Tire Status Overview</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Vehicle</th>
+                            <th>Last Change</th>
+                            <th>KM Since Change</th>
+                            <th>KM Until Next Change</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for car in cars %}
+                        {% with tire_status=car.get_tire_status %}
+                        {% if tire_status %}
+                        <tr>
+                            <td>{{ car.rego }}</td>
+                            <td>{{ tire_status.last_change_date }}</td>
+                            <td>{{ tire_status.km_since_change|default:"-" }} km</td>
+                            <td>
+                                {% if tire_status.km_until_change %}
+                                    {% if tire_status.km_until_change < 0 %}
+                                        <span class="text-danger">Overdue by {{ tire_status.km_until_change|absolute }} km</span>
+                                    {% else %}
+                                        {{ tire_status.km_until_change }} km
+                                    {% endif %}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if tire_status.change_due %}
+                                    <span class="badge bg-danger">Change Due</span>
+                                {% else %}
+                                    <span class="badge bg-success">OK</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% endwith %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Parse the Django template variables into JavaScript variables
+    const monthlyMaintenanceCosts = JSON.parse('{{ monthly_maintenance_costs|escapejs }}');
+    const monthlyFuelCosts = JSON.parse('{{ monthly_fuel_costs|escapejs }}');
+    const vehicleLabels = JSON.parse('{{ vehicle_labels|escapejs }}');
+    const vehicleCosts = JSON.parse('{{ vehicle_costs|escapejs }}');
+
+    // Monthly Maintenance Chart
+    const maintenanceCtx = document.getElementById('monthlyMaintenanceChart').getContext('2d');
+    new Chart(maintenanceCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            datasets: [{
+                label: 'Maintenance Cost ($)',
+                data: monthlyMaintenanceCosts,
+                backgroundColor: 'rgba(255, 193, 7, 0.2)',
+                borderColor: 'rgba(255, 193, 7, 1)',
+                borderWidth: 1
+            },
+            {
+                label: 'Fuel Cost ($)',
+                data: monthlyFuelCosts,
+                backgroundColor: 'rgba(23, 162, 184, 0.2)',
+                borderColor: 'rgba(23, 162, 184, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Cost ($)'
+                    }
+                }
+            }
+        }
+    });
+
+    // Cost Per Vehicle Chart
+    const vehicleCostCtx = document.getElementById('costPerVehicleChart').getContext('2d');
+    new Chart(vehicleCostCtx, {
+        type: 'doughnut',
+        data: {
+            labels: vehicleLabels,
+            datasets: [{
+                data: vehicleCosts,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 206, 86, 0.8)',
+                    'rgba(75, 192, 192, 0.8)',
+                    'rgba(153, 102, 255, 0.8)',
+                    'rgba(255, 159, 64, 0.8)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right'
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

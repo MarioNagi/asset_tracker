@@ -15,7 +15,7 @@
             <div class="card-body">
                 <h5 class="card-title">{{ tools.count }} Tools</h5>
                 <p class="card-text">Manage all tools and their calibration statuses.</p>
-                <a href="{% url 'tool-list' %}" class="btn btn-light">View Tools</a>
+                <a href="{% url 'tool_list' %}" class="btn btn-light">View Tools</a>
             </div>
         </div>
     </div>
@@ -43,7 +43,7 @@
             <div class="card-body">
                 <h5 class="card-title">{{ maintenance_records.count }} Maintenance Records</h5>
                 <p class="card-text">Monitor and manage car maintenance details.</p>
-                <a href="{% url 'maintenance-list' %}" class="btn btn-light">View Maintenance</a>
+                <a href="{% url 'maintenance_list' %}" class="btn btn-light">View Maintenance</a>
             </div>
         </div>
     </div>
@@ -55,7 +55,7 @@
             <div class="card-body">
                 <h5 class="card-title">{{ users.count }} Users</h5>
                 <p class="card-text">Manage users and their permissions.</p>
-                <a href="{% url 'user-list' %}" class="btn btn-light">Manage Users</a>
+                <a href="{% url 'user_list' %}" class="btn btn-light">Manage Users</a>
             </div>
         </div>
     </div>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Odometer Updated - {{ car.rego }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: #17a2b8;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .car-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .odometer-update {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+        }
+        .odometer-box {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+            flex: 1;
+            margin: 0 10px;
+        }
+        .odometer-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .odometer-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        .service-alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .service-overdue {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .service-due-soon {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #6c757d;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Odometer Updated</h1>
+            <p>Vehicle odometer reading has been updated</p>
+        </div>
+
+        <div class="info">
+            <strong>Update Notification:</strong> The odometer reading for {{ car.rego }} has been updated by {{ updated_by.get_full_name|default:updated_by.username }}.
+        </div>
+
+        <div class="car-info">
+            <h3>Vehicle Information</h3>
+            <p><strong>Vehicle:</strong> {{ car.make }} {{ car.model }}</p>
+            <p><strong>Registration:</strong> {{ car.rego }}</p>
+            {% if car.assigned_user %}
+            <p><strong>Assigned to:</strong> {{ car.assigned_user.get_full_name }}</p>
+            {% endif %}
+            <p><strong>Updated by:</strong> {{ updated_by.get_full_name|default:updated_by.username }}</p>
+        </div>
+
+        <div class="odometer-update">
+            <div class="odometer-box">
+                <div class="odometer-value">{{ old_odometer|floatformat:0 }}</div>
+                <div class="odometer-label">Previous Reading (km)</div>
+            </div>
+            <div class="odometer-box">
+                <div class="odometer-value">{{ new_odometer|floatformat:0 }}</div>
+                <div class="odometer-label">Current Reading (km)</div>
+            </div>
+            <div class="odometer-box">
+                <div class="odometer-value">{{ km_until_service|floatformat:0 }}</div>
+                <div class="odometer-label">Km Until Service</div>
+            </div>
+        </div>
+
+        {% if service_overdue %}
+        <div class="service-alert service-overdue">
+            <h4>🚨 SERVICE OVERDUE</h4>
+            <p>This vehicle is overdue for service and requires immediate attention.</p>
+        </div>
+        {% elif service_due_soon %}
+        <div class="service-alert service-due-soon">
+            <h4>⚠️ SERVICE DUE SOON</h4>
+            <p>This vehicle is approaching its service interval. Please schedule service soon.</p>
+        </div>
+        {% endif %}
+
+        <div class="footer">
+            <p>This is an automated notification from Koinonia Enterprises Asset Tracker.</p>
+            <p>Please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+</html>

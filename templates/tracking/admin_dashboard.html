@@ -6,18 +6,18 @@
 <p>This is your dashboard where you have full access to the system.</p>
 
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card text-white bg-success mb-3">
             <div class="card-header">Tools</div>
             <div class="card-body">
                 <h5 class="card-title">{{ tools.count }} Tools</h5>
                 <p>Manage all tools across the system.</p>
-                <a href="{% url 'tool-list' %}" class="btn btn-light">View Tools</a>
+                <a href="{% url 'tool_list' %}" class="btn btn-light">View Tools</a>
             </div>
         </div>
     </div>
 
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card text-white bg-primary mb-3">
             <div class="card-header">Cars</div>
             <div class="card-body">
@@ -28,13 +28,87 @@
         </div>
     </div>
 
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card text-white bg-warning mb-3">
             <div class="card-header">Users</div>
             <div class="card-body">
                 <h5 class="card-title">{{ users.count }} Users</h5>
                 <p>Manage all users across the system.</p>
-                <a href="{% url 'user-list' %}" class="btn btn-light">View Users</a>
+                <a href="{% url 'user_list' %}" class="btn btn-light">View Users</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Maintenance Card -->
+    <div class="col-md-3">
+        <div class="card text-white bg-info mb-3">
+            <div class="card-header">Maintenance</div>
+            <div class="card-body">
+                <h5 class="card-title">{{ maintenance_records.count }} Records</h5>
+                <p>Track all maintenance items and costs.</p>
+                <a href="{% url 'maintenance_list' %}" class="btn btn-light">View Maintenance</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Service Status Overview -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fa fa-tachometer-alt"></i> Fleet Service Status</h4>
+            </div>
+            <div class="card-body">
+                {% if cars %}
+                <div class="row">
+                    {% for car in cars %}
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card h-100 {% if car.is_service_due_by_km %}border-danger{% elif car.is_service_approaching %}border-warning{% else %}border-success{% endif %}">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <strong>{{ car.rego }}</strong>
+                                {% if car.is_service_due_by_km %}
+                                    <span class="badge bg-danger">OVERDUE</span>
+                                {% elif car.is_service_approaching %}
+                                    <span class="badge bg-warning text-dark">DUE SOON</span>
+                                {% else %}
+                                    <span class="badge bg-success">OK</span>
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                <h6 class="card-title">{{ car.make }} {{ car.model }}</h6>
+                                <small class="text-muted">{{ car.assigned_user.get_full_name|default:"Unassigned" }}</small>
+                                <div class="row mt-2">
+                                    <div class="col-6 text-center">
+                                        <div class="h6 mb-0">{{ car.current_odometer|floatformat:0 }}</div>
+                                        <small class="text-muted">Current KM</small>
+                                    </div>
+                                    <div class="col-6 text-center">
+                                        <div class="h6 mb-0">{{ car.service_odometer|floatformat:0 }}</div>
+                                        <small class="text-muted">Service Due</small>
+                                    </div>
+                                </div>
+                                {% if car.is_service_due_by_km %}
+                                    <div class="text-center mt-2">
+                                        <small class="text-danger">{{ car.current_odometer|add:"-"|add:car.service_odometer|floatformat:0 }} km overdue</small>
+                                    </div>
+                                {% elif car.is_service_approaching %}
+                                    <div class="text-center mt-2">
+                                        <small class="text-warning">{{ car.km_until_service|floatformat:0 }} km remaining</small>
+                                    </div>
+                                {% else %}
+                                    <div class="text-center mt-2">
+                                        <small class="text-success">{{ car.km_until_service|floatformat:0 }} km remaining</small>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No cars in the system.</p>
+                {% endif %}
             </div>
         </div>
     </div>

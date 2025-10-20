@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #f8f9fa; padding: 20px; margin-bottom: 20px; }
+        .details { margin: 20px 0; }
+        .warning { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Vehicle Service Due</h2>
+        </div>
+        
+        <p>Dear {{ vehicle.assigned_user.get_full_name }},</p>
+        
+        <p>This is a reminder that vehicle <strong>{{ vehicle.rego }}</strong> ({{ vehicle.make }} {{ vehicle.model }}) is due for service.</p>
+
+        <div class="details">
+            <h3>Service Details:</h3>
+            <ul>
+                {% if service_date %}
+                    <li>Next Service Date: {{ service_date }}</li>
+                {% endif %}
+                {% if last_service_km %}
+                    <li>Last Service: {{ last_service_km }} km</li>
+                {% endif %}
+                {% if current_km %}
+                    <li>Current Odometer: {{ current_km }} km</li>
+                    <li>Distance since last service: {{ current_km|subtract:last_service_km }} km</li>
+                {% endif %}
+            </ul>
+        </div>
+
+        <p class="warning">Please schedule a service appointment as soon as possible to maintain the vehicle's warranty and ensure safe operation.</p>
+
+        <p>Best regards,<br>
+        Fleet Management Team</p>
+    </div>
+</body>
+</html>

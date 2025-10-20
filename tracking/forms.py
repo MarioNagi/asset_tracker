@@ -11,11 +11,17 @@ from .models import Profile
 # --------- Import Form ---------
 class ImportForm(forms.Form):
     FILE_TYPE_CHOICES = [
+        ('User', 'User'),
         ('Tool', 'Tool'),
         ('Car', 'Car'),
     ]
-    file = forms.FileField()
-    type = forms.ChoiceField(choices=FILE_TYPE_CHOICES)
+    FILE_FORMAT_CHOICES = [
+        ('csv', 'CSV'),
+        ('excel', 'Excel')
+    ]
+    file = forms.FileField(help_text='Select a CSV or Excel file to import')
+    type = forms.ChoiceField(choices=FILE_TYPE_CHOICES, help_text='Select the type of data to import')
+    format = forms.ChoiceField(choices=FILE_FORMAT_CHOICES, help_text='Select the file format')
 
     def __init__(self, *args, **kwargs):
         super(ImportForm, self).__init__(*args, **kwargs)
@@ -53,12 +59,11 @@ class CarForm(forms.ModelForm):
         model = Car
         fields = [
             'rego', 'rego_expiry_date', 'purchase_date', 'purchase_price', 'state',
-            'assigned_user', 'maintenance_sticker_date', 'make', 'model', 'vin_number','manufacturing_year', 'color', 'body', 'photo'
+            'assigned_user', 'current_odometer', 'service_odometer', 'make', 'model', 'vin_number','manufacturing_year', 'color', 'body', 'photo'
         ]
         widgets = {
             'rego_expiry_date': DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'purchase_date': DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'maintenance_sticker_date': DateInput(attrs={'type': 'date', 'class': 'form-control'})
+            'purchase_date': DateInput(attrs={'type': 'date', 'class': 'form-control'})
         }
     def __init__(self, *args, **kwargs):
         super(CarForm, self).__init__(*args, **kwargs)
@@ -76,29 +81,64 @@ class OdometerReadingForm(forms.ModelForm):
         self.helper = FormHelper()
         self.helper.add_input(Submit('submit', 'Save Odometer Reading'))
 
+# --------- Odometer Update Form ---------
+class OdometerUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Car
+        fields = ['current_odometer']
+        widgets = {
+            'current_odometer': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter current odometer reading',
+                'min': 0
+            })
+        }
+        labels = {
+            'current_odometer': 'Current Odometer Reading (km)'
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(OdometerUpdateForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.add_input(Submit('submit', 'Update Odometer'))
+
+    def clean_current_odometer(self):
+        new_odometer = self.cleaned_data.get('current_odometer')
+        current_odometer = self.instance.current_odometer
+        
+        if new_odometer is not None and new_odometer <= current_odometer:
+            raise forms.ValidationError(
+                f'New odometer reading ({new_odometer:,} km) must be higher than the current reading ({current_odometer:,} km).'
+            )
+        
+        return new_odometer
+
 # --------- Maintenance Form ---------
 class MaintenanceForm(forms.ModelForm):
     class Meta:
         model = Maintenance
         fields = [
-            'car', 'tires_change_date', 'tires_alert_km', 'last_service_date', 'service_alert_km',
-            'mechanic_notes', 'tire_alignment', 'tire_status', 'monthly_odometer_alert',
-            'maintenance_actions', 'yearly_cost', 'accident_history'
+            'car', 'service_date', 'odometer_reading', 'service_type',
+            'invoice_number', 'service_provider', 'description',
+            'total_cost', 'documents'
         ]
         widgets = {
-            'tires_change_date': DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'last_service_date': DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'service_date': DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'documents': forms.FileInput(attrs={'class': 'form-control'})
         }
-    MaintenanceItemFormSet = inlineformset_factory(
-    Maintenance, MaintenanceItem,
-    fields=['description', 'cost'],
-    extra=1,  # Allows adding a new item dynamically
-    can_delete=True  # Allows removing items
-)
+
     def __init__(self, *args, **kwargs):
         super(MaintenanceForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.add_input(Submit('submit', 'Save Maintenance Record'))
+
+MaintenanceItemFormSet = inlineformset_factory(
+    Maintenance, MaintenanceItem,
+    fields=['description', 'item_type', 'quantity', 'unit_cost'],
+    extra=1,
+    can_delete=True
+)
 
 # --------- Transfer Form ---------
 class TransferForm(forms.ModelForm):
@@ -154,4 +194,4 @@ class UserUpdateForm(UserChangeForm):
 class MaintenanceItemForm(forms.ModelForm):
     class Meta:
         model = MaintenanceItem
-        fields = ['description', 'cost']
+        fields = ['description', 'item_type', 'quantity', 'unit_cost']

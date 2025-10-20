@@ -5,19 +5,66 @@
 <h2>Welcome, {{ user.get_full_name }}</h2>
 <p>This is your dashboard where you can manage your assigned car.</p>
 
-<div class="card text-white bg-primary mb-3">
-    <div class="card-header">Your Car</div>
-    <div class="card-body">
-        {% if cars %}
-            {% for car in cars %}
-                <h5 class="card-title">{{ car.make }} {{ car.model }}</h5>
-                <p class="card-text">Rego: {{ car.rego }}</p>
-                <p class="card-text">VIN: {{ car.vin_number }}</p>
-                <a href="{% url 'odometer-add' %}" class="btn btn-light">Add Odometer Reading</a>
-            {% endfor %}
-        {% else %}
-            <p>No cars assigned to you.</p>
-        {% endif %}
+{% if cars %}
+    {% for car in cars %}
+    <div class="row">
+        <!-- Car Info Card -->
+        <div class="col-md-6">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-header">Your Car - {{ car.rego }}</div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ car.make }} {{ car.model }}</h5>
+                    <p class="card-text">VIN: {{ car.vin_number }}</p>
+                    <a href="{% url 'odometer_add' %}" class="btn btn-light">Add Odometer Reading</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Odometer & Service Status Card -->
+        <div class="col-md-6">
+            <div class="card mb-3 {% if car.is_service_due_by_km %}border-danger text-white bg-danger{% elif car.is_service_approaching %}border-warning bg-warning{% else %}border-success bg-light{% endif %}">
+                <div class="card-header">
+                    <i class="fa fa-tachometer-alt"></i> Service Status
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="h4 {% if car.is_service_due_by_km or car.is_service_approaching %}text-white{% else %}text-dark{% endif %}">{{ car.current_odometer|floatformat:0 }}</div>
+                            <small class="{% if car.is_service_due_by_km or car.is_service_approaching %}text-white-50{% else %}text-muted{% endif %}">Current KM</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="h4 {% if car.is_service_due_by_km or car.is_service_approaching %}text-white{% else %}text-dark{% endif %}">{{ car.service_odometer|floatformat:0 }}</div>
+                            <small class="{% if car.is_service_due_by_km or car.is_service_approaching %}text-white-50{% else %}text-muted{% endif %}">Service Due at</small>
+                        </div>
+                    </div>
+                    <hr class="{% if car.is_service_due_by_km or car.is_service_approaching %}border-white-50{% else %}border-dark{% endif %}">
+                    {% if car.is_service_due_by_km %}
+                        <div class="text-center">
+                            <strong class="text-white">⚠️ SERVICE OVERDUE</strong><br>
+                            <small class="text-white">{{ car.current_odometer|add:"-"|add:car.service_odometer|floatformat:0 }} km overdue</small>
+                        </div>
+                    {% elif car.is_service_approaching %}
+                        <div class="text-center">
+                            <strong class="text-white">🔔 SERVICE APPROACHING</strong><br>
+                            <small class="text-white">{{ car.km_until_service|floatformat:0 }} km remaining</small>
+                        </div>
+                    {% else %}
+                        <div class="text-center">
+                            <strong class="text-success">✅ SERVICE OK</strong><br>
+                            <small class="text-muted">{{ car.km_until_service|floatformat:0 }} km remaining</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
-</div>
+    {% endfor %}
+{% else %}
+    <div class="card text-white bg-secondary mb-3">
+        <div class="card-header">Your Car</div>
+        <div class="card-body">
+            <p>No cars assigned to you.</p>
+        </div>
+    </div>
+{% endif %}
 {% endblock %}

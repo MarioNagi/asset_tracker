@@ -30,31 +30,26 @@ class ToolAdmin(admin.ModelAdmin):
 class CarAdmin(admin.ModelAdmin):
     list_display = (
         'rego', 'make', 'model', 'state', 'purchase_date', 'purchase_price',
-        'assigned_user', 'rego_expiry_date', 'maintenance_sticker_date', 'is_rego_due', 'is_maintenance_due'
+        'assigned_user', 'rego_expiry_date', 'current_odometer', 'service_odometer', 'is_service_due'
     )
     list_filter = ('make', 'model', 'state', 'assigned_user')
     search_fields = ('rego', 'vin_number', 'make', 'model')
 
-    def is_rego_due(self, obj):
-        return obj.is_rego_due()
-    is_rego_due.boolean = True
-    is_rego_due.short_description = 'Rego Due'
-
-    def is_maintenance_due(self, obj):
-        return obj.is_maintenance_due()
-    is_maintenance_due.boolean = True
-    is_maintenance_due.short_description = 'Maintenance Due'
+    def is_service_due(self, obj):
+        return obj.is_service_due_by_km()
+    is_service_due.boolean = True
+    is_service_due.short_description = 'Service Due'
 
 
 # --------- Maintenance Admin ---------
 @admin.register(Maintenance)
 class MaintenanceAdmin(admin.ModelAdmin):
     list_display = (
-        'car', 'tires_change_date', 'last_service_date', 'tire_alignment',
-        'yearly_cost', 'monthly_odometer_alert'
+        'car', 'service_date', 'service_type', 'service_provider',
+        'total_cost', 'odometer_reading'
     )
-    list_filter = ('car', 'tires_change_date', 'last_service_date', 'tire_alignment')
-    search_fields = ('car__rego', 'mechanic_notes')
+    list_filter = ('car', 'service_date', 'service_type', 'service_provider')
+    search_fields = ('car__rego', 'service_provider', 'description', 'invoice_number')
 
 
 # --------- Odometer Reading Admin ---------

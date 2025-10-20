@@ -1,0 +1,142 @@
+{% extends 'tracking/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Update Odometer - {{ car.rego }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Update Odometer Reading</h4>
+                    <small class="text-muted">{{ car.make }} {{ car.model }} ({{ car.rego }})</small>
+                </div>
+                <div class="card-body">
+                    <!-- Current Status -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card text-center h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary">Current Odometer</h5>
+                                    <h3 class="text-primary">{{ car.current_odometer|floatformat:0 }}</h3>
+                                    <small class="text-muted">kilometers</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-center h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title text-info">Service Due At</h5>
+                                    <h3 class="text-info">{{ car.service_odometer|floatformat:0 }}</h3>
+                                    <small class="text-muted">kilometers</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-center h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title 
+                                        {% if car.is_service_due_by_km %}text-danger
+                                        {% elif car.is_service_approaching %}text-warning
+                                        {% else %}text-success{% endif %}">
+                                        Kilometers Until Service
+                                    </h5>
+                                    <h3 class="{% if car.is_service_due_by_km %}text-danger
+                                               {% elif car.is_service_approaching %}text-warning
+                                               {% else %}text-success{% endif %}">
+                                        {{ car.km_until_service|floatformat:0 }}
+                                    </h3>
+                                    <small class="text-muted">
+                                        {% if car.is_service_due_by_km %}
+                                            OVERDUE
+                                        {% elif car.is_service_approaching %}
+                                            DUE SOON
+                                        {% else %}
+                                            kilometers
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Service Status Alert -->
+                    {% if car.is_service_due_by_km %}
+                    <div class="alert alert-danger" role="alert">
+                        <h5 class="alert-heading">⚠️ Service Overdue!</h5>
+                        <p>This vehicle has exceeded its service interval. Please schedule service immediately.</p>
+                    </div>
+                    {% elif car.is_service_approaching %}
+                    <div class="alert alert-warning" role="alert">
+                        <h5 class="alert-heading">🔔 Service Due Soon</h5>
+                        <p>This vehicle is approaching its service interval. Please schedule service soon.</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Update Form -->
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="form-group">
+                            {{ form.current_odometer|as_crispy_field }}
+                            <small class="form-text text-muted">
+                                Enter the current odometer reading. This should be higher than the current reading ({{ car.current_odometer|floatformat:0 }} km).
+                            </small>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Update Odometer
+                            </button>
+                            <a href="{% url 'car_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+
+                    <!-- Information Card -->
+                    <div class="card mt-4 bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <i class="fas fa-info-circle"></i> Important Information
+                            </h6>
+                            <ul class="mb-0">
+                                <li>Updating the odometer will trigger email notifications to relevant users</li>
+                                <li>If service is due or approaching, additional alerts will be sent</li>
+                                <li>Make sure to enter an accurate reading as this affects service scheduling</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const currentOdometer = {{ car.current_odometer }};
+    const serviceOdometer = {{ car.service_odometer }};
+    const odometerInput = document.querySelector('#id_current_odometer');
+
+    form.addEventListener('submit', function(e) {
+        const newReading = parseInt(odometerInput.value);
+        
+        if (newReading <= currentOdometer) {
+            e.preventDefault();
+            alert('The new odometer reading must be higher than the current reading (' + currentOdometer + ' km).');
+            return false;
+        }
+
+        if (newReading >= serviceOdometer) {
+            if (!confirm('This odometer reading indicates that service is due or overdue. Are you sure you want to continue?')) {
+                e.preventDefault();
+                return false;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

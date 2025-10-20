@@ -6,121 +6,127 @@
 <div class="container mt-5">
     <h2>Tools</h2>
     <div class="d-flex justify-content-between mb-3">
-        <a href="{% url 'tool-add' %}" class="btn btn-primary">Add Tool</a>
+        <a href="{% url 'tool_add' %}" class="btn btn-primary">Add Tool</a>
         <a href="{% url 'import' %}?type=Tool" class="btn btn-secondary">Upload CSV</a>
     </div>
 
-    <form method="get" action="">
-        <div class="row mb-3">
-            <div class="col-md-4">
-                <label for="user" class="form-label">Filter by User:</label>
-                <select name="user" id="user" class="form-control" onchange="this.form.submit();">
-                    <option value="">All Users</option>
-                    {% for user in users %}
+    <!-- Filters -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5 class="mb-0">Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="user" class="form-label">Assigned User</label>
+                    <select name="user" id="user" class="form-select">
+                        <option value="">All Users</option>
+                        {% for user in users %}
                         <option value="{{ user.id }}" {% if request.GET.user == user.id|stringformat:"s" %}selected{% endif %}>
                             {{ user.get_full_name }}
                         </option>
-                    {% endfor %}
-                </select>
-            </div>
+                        {% endfor %}
+                    </select>
+                </div>
 
-            <div class="col-md-4">
-                <label for="tool_name" class="form-label">Filter by Tool Name:</label>
-                <select name="tool_name" id="tool_name" class="form-control" onchange="this.form.submit();">
-                    <option value="">All Tools</option>
-                    {% for name in tool_names %}
+                <div class="col-md-4">
+                    <label for="tool_name" class="form-label">Tool Name</label>
+                    <select name="tool_name" id="tool_name" class="form-select">
+                        <option value="">All Tools</option>
+                        {% for name in tool_names %}
                         <option value="{{ name }}" {% if request.GET.tool_name == name %}selected{% endif %}>
                             {{ name }}
                         </option>
-                    {% endfor %}
-                </select>
-            </div>
+                        {% endfor %}
+                    </select>
+                </div>
 
-            <div class="col-md-4">
-                <label for="state" class="form-label">Filter by State:</label>
-                <select name="state" id="state" class="form-control" onchange="this.form.submit();">
-                    <option value="">All States</option>
-                    {% for state in states %}
+                <div class="col-md-4">
+                    <label for="state" class="form-label">State</label>
+                    <select name="state" id="state" class="form-select">
+                        <option value="">All States</option>
+                        {% for state in states %}
                         <option value="{{ state }}" {% if request.GET.state == state %}selected{% endif %}>
                             {{ state }}
                         </option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
+                        {% endfor %}
+                    </select>
+                </div>
 
-        <div class="row mb-4">
-            <div class="col-md-4">
-                <label for="brand" class="form-label">Filter by Brand:</label>
-                <select name="brand" id="brand" class="form-control" onchange="this.form.submit();">
-                    <option value="">All Brands</option>
-                    {% for b in brands %}
+                <div class="col-md-4">
+                    <label for="brand" class="form-label">Brand</label>
+                    <select name="brand" id="brand" class="form-select">
+                        <option value="">All Brands</option>
+                        {% for b in brands %}
                         <option value="{{ b }}" {% if request.GET.brand == b %}selected{% endif %}>
                             {{ b }}
                         </option>
-                    {% endfor %}
-                </select>
-            </div>
+                        {% endfor %}
+                    </select>
+                </div>
 
-            <div class="col-md-4">
-                <label for="car" class="form-label">Filter by Car:</label>
-                <select name="car" id="car" class="form-control" onchange="this.form.submit();">
-                    <option value="">All Cars</option>
-                    {% for car in cars %}
+                <div class="col-md-4">
+                    <label for="car" class="form-label">Assigned Car</label>
+                    <select name="car" id="car" class="form-select">
+                        <option value="">All Cars</option>
+                        {% for car in cars %}
                         <option value="{{ car.rego }}" {% if request.GET.car == car.rego %}selected{% endif %}>
                             {{ car.rego }}
                         </option>
-                    {% endfor %}
-                </select>
-            </div>
+                        {% endfor %}
+                    </select>
+                </div>
 
-            <div class="col-md-4 d-flex align-items-end">
-                <a href="{% url 'tool-list' %}" class="btn btn-outline-secondary w-100">Clear Filters</a>
-            </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    <a href="{% url 'tool_list' %}" class="btn btn-secondary">Clear Filters</a>
+                </div>
+            </form>
         </div>
-    </form>
+    </div>
+
     <div class="table-responsive">
-    <table class="table table-striped mt-5">
-        <thead>
-            <tr>
-                <th>internal Number</th>
-                <th>Serial Number</th>
-                <th>Name</th>
-                <th>Brand</th>
-                <th>State</th>
-                <th>Quantity</th>
-                <th>Store</th>
-                <th>Calibration Due Date</th>
-                <th>Assigned User</th>
-                <th>Assigned Car</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for tool in tools %}
-            <tr>
-                <td>{{ tool.internal_number }}</td>
-                <td>{{ tool.serial_number }}</td>
-                <td>{{ tool.tool_name }}</td>
-                <td>{{ tool.brand }}</td>
-                <td>{{ tool.state }}</td>
-                <td>{{ tool.quantity }}</td>
-                <td>{{ tool.store }}</td>
-                <td>{{ tool.calibration_date|default:"N/A" }}</td>
-                <td>{{ tool.assigned_user.get_full_name }}</td>
-                <td>{{ tool.assigned_car.rego }}</td>
-                <td>
-                    <a href="{% url 'tool-edit' tool.pk %}" class="btn btn-sm btn-warning">Edit</a>
-                    <a href="{% url 'tool-delete' tool.pk %}" class="btn btn-sm btn-danger">Delete</a>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="7" class="text-center">No tools found.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+        <table class="table table-striped mt-3">
+            <thead>
+                <tr>
+                    <th>Internal Number</th>
+                    <th>Serial Number</th>
+                    <th>Name</th>
+                    <th>Brand</th>
+                    <th>State</th>
+                    <th>Quantity</th>
+                    <th>Store</th>
+                    <th>Calibration Due Date</th>
+                    <th>Assigned User</th>
+                    <th>Assigned Car</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tool in tools %}
+                <tr>
+                    <td>{{ tool.internal_number }}</td>
+                    <td>{{ tool.serial_number }}</td>
+                    <td>{{ tool.tool_name }}</td>
+                    <td>{{ tool.brand }}</td>
+                    <td>{{ tool.state }}</td>
+                    <td>{{ tool.quantity }}</td>
+                    <td>{{ tool.store }}</td>
+                    <td>{{ tool.calibration_date|default:"N/A" }}</td>
+                    <td>{{ tool.assigned_user.get_full_name }}</td>
+                    <td>{{ tool.assigned_car.rego }}</td>
+                    <td>
+                        <a href="{% url 'tool_edit' tool.pk %}" class="btn btn-sm btn-warning">Edit</a>
+                        <a href="{% url 'tool_delete' tool.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="11" class="text-center">No tools found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}

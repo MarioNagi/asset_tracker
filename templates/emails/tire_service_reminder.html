@@ -13,19 +13,24 @@
 <body>
     <div class="container">
         <div class="header">
-            <h2>Vehicle Registration Expiring Soon</h2>
+            <h2>Tire Service Due</h2>
         </div>
         
         <p>Dear {{ vehicle.assigned_user.get_full_name }},</p>
         
-        <p>This is a reminder that the registration for vehicle <strong>{{ vehicle.rego }}</strong> ({{ vehicle.make }} {{ vehicle.model }}) will expire in {{ days_remaining }} days.</p>
+        <p>This is a reminder that vehicle <strong>{{ vehicle.rego }}</strong> ({{ vehicle.make }} {{ vehicle.model }}) is due for tire service.</p>
 
         <div class="details highlight">
-            <p><strong>Registration Expiry Date:</strong> {{ expiry_date }}</p>
-            <p><strong>Days Remaining:</strong> {{ days_remaining }}</p>
+            <h3>Service Details:</h3>
+            <ul>
+                <li>Last Tire Service: {{ last_tire_service }}</li>
+                <li>Current Odometer: {{ current_km }} km</li>
+                <li>Recommended Change: {{ recommended_change_km }} km</li>
+                <li>Distance Over: {{ current_km|subtract:recommended_change_km }} km</li>
+            </ul>
         </div>
 
-        <p class="warning">Please ensure the registration is renewed before the expiry date to avoid any penalties and maintain vehicle compliance.</p>
+        <p class="warning">Please schedule a tire service appointment as soon as possible to ensure safe operation of the vehicle.</p>
 
         <p>Best regards,<br>
         Fleet Management Team</p>

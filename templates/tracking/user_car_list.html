@@ -1,0 +1,71 @@
+{% extends 'tracking/base.html' %}
+
+{% block title %}My Cars{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>My Assigned Cars</h2>
+
+    {% if cars %}
+        {% for car in cars %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{{ car.make }} {{ car.model }} ({{ car.rego }})</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>VIN:</strong> {{ car.vin_number }}</p>
+                            <p><strong>State:</strong> {{ car.state }}</p>
+                            <p><strong>Color:</strong> {{ car.color }}</p>
+                            <p><strong>Body Type:</strong> {{ car.body }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            {% if car.photo %}
+                                <img src="{{ car.photo.url }}" alt="{{ car.make }} {{ car.model }}" class="img-fluid rounded">
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <h6>Recent Odometer Readings</h6>
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Reading</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for reading in odometer_readings %}
+                                    {% if reading.car == car %}
+                                        <tr>
+                                            <td>{{ reading.reading_date }}</td>
+                                            <td>{{ reading.reading_value }} km</td>
+                                        </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <a href="{% url 'odometer-add' %}" class="btn btn-primary">Add Odometer Reading</a>
+                    </div>
+
+                    {% if car.next_service_date %}
+                        <div class="mt-4">
+                            <h6>Maintenance Status</h6>
+                            <p>Next Service Date: {{ car.next_service_date }}</p>
+                            {% if car.is_service_due %}
+                                <div class="alert alert-warning">Service is due!</div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info">
+            <p>You don't have any cars assigned to you.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

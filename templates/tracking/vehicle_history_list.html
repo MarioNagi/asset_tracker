@@ -1,0 +1,12 @@
+{% extends 'tracking/base.html' %}
+{% block title %}Vehicle History{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="page-header"><div><div class="page-eyebrow">Cars</div><h1>Vehicle history</h1><p class="page-subtitle">Sold and written-off vehicles retained for company records.</p></div><a class="btn btn-secondary" href="{% url 'car_list' %}">Active vehicles</a></div>
+  <div class="table-responsive"><table class="table table-hover">
+    <thead><tr><th>Rego</th><th>Vehicle</th><th>Status</th><th>Retired</th><th>Final odometer</th><th>Amount received</th><th></th></tr></thead>
+    <tbody>{% for car in cars %}<tr><td><strong>{{ car.rego }}</strong></td><td>{{ car.make }} {{ car.model }}</td><td><span class="badge text-bg-secondary">{{ car.get_status_display }}</span></td><td>{{ car.retired_at }}</td><td>{{ car.final_odometer|default:'—' }} km</td><td>${{ car.final_value|default:'—' }}</td><td><a class="btn btn-sm btn-secondary" href="{% url 'car_detail' car.pk %}">View record</a></td></tr>{% empty %}<tr><td colspan="7" class="text-center py-4">No retired vehicles.</td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% include 'tracking/_pagination.html' %}
+</div>
+{% endblock %}

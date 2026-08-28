@@ -22,7 +22,7 @@
                         </div>
                         <div class="col-md-6">
                             {% if car.photo %}
-                                <img src="{{ car.photo.url }}" alt="{{ car.make }} {{ car.model }}" class="img-fluid rounded">
+                                <img src="{% url 'car_photo' car.pk %}" alt="{{ car.make }} {{ car.model }}" class="img-fluid rounded">
                             {% endif %}
                         </div>
                     </div>
@@ -47,7 +47,7 @@
                                 {% endfor %}
                             </tbody>
                         </table>
-                        <a href="{% url 'odometer-add' %}" class="btn btn-primary">Add Odometer Reading</a>
+                        <a href="{% url 'odometer_add' %}" class="btn btn-primary">Add Odometer Reading</a>
                     </div>
 
                     {% if car.next_service_date %}
@@ -67,5 +67,6 @@
             <p>You don't have any cars assigned to you.</p>
         </div>
     {% endif %}
+    {% include 'tracking/_pagination.html' %}
 </div>
 {% endblock %}

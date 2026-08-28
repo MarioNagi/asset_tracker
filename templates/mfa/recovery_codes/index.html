@@ -1,0 +1,25 @@
+{% extends "mfa/manage_base.html" %}
+{% load static %}
+
+{% block title %}Recovery Codes{% endblock %}
+{% block mfa_title %}Recovery Codes{% endblock %}
+{% block mfa_subtitle %}Each code can be used once when your authenticator device is unavailable.{% endblock %}
+
+{% block mfa_content %}
+<div class="card mfa-card">
+    <div class="card-body p-4">
+        <div class="alert alert-warning"><i class="fas fa-lock me-2"></i>Treat these codes like passwords. Store them outside this device.</div>
+        <p>{{ unused_codes|length }} of {{ total_count }} recovery codes remain available.</p>
+        {% if can_view_codes %}
+            <label for="recovery_codes" class="form-label fw-semibold">Unused codes</label>
+            <textarea id="recovery_codes" class="form-control recovery-code-list" rows="{{ unused_codes|length }}" readonly>{% for code in unused_codes %}{{ code }}{% if not forloop.last %}
+{% endif %}{% endfor %}</textarea>
+        {% endif %}
+        <div class="d-flex flex-column flex-sm-row flex-wrap gap-2 mt-4 mfa-actions">
+            {% if can_download_codes %}<a class="btn btn-primary" href="{% url 'mfa_download_recovery_codes' %}"><i class="fas fa-download me-1"></i> Download codes</a>{% endif %}
+            {% if can_generate_codes %}<a class="btn btn-outline-danger" href="{% url 'mfa_generate_recovery_codes' %}">Generate new codes</a>{% endif %}
+            <a class="btn btn-outline-secondary ms-sm-auto" href="{% url 'mfa_index' %}">Back to Security</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

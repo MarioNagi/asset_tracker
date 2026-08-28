@@ -1,4 +1,5 @@
 {% extends 'tracking/base.html' %}
+{% load custom_filters %}
 
 {% block title %}Manager's Cars{% endblock %}
 
@@ -35,7 +36,7 @@
                 <td>{{ car.make }}</td>
                 <td>{{ car.model }}</td>
                 <td>{{ car.vin_number }}</td>
-                <td>{{ car.assigned_user.get_full_name }}</td>
+                <td>{{ car.assigned_user|user_display }}</td>
             </tr>
             {% empty %}
             <tr>
@@ -44,5 +45,6 @@
             {% endfor %}
         </tbody>
     </table>
+    {% include 'tracking/_pagination.html' %}
 </div>
 {% endblock %}

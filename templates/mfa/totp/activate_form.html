@@ -1,0 +1,42 @@
+{% extends "mfa/manage_base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}Activate Authenticator App{% endblock %}
+{% block mfa_title %}Activate Authenticator App{% endblock %}
+{% block mfa_subtitle %}Scan once, then confirm the current six-digit code.{% endblock %}
+
+{% block mfa_content %}
+<div class="card mfa-card">
+    <div class="card-body p-4">
+        <form method="post" action="{% url 'mfa_activate_totp' %}" novalidate>
+            {% csrf_token %}
+            <div class="row g-4 align-items-center">
+                <div class="col-md-5 text-center">
+                    <img class="mfa-qr" src="{{ totp_svg_data_uri }}" alt="Authenticator setup QR code">
+                </div>
+                <div class="col-md-7">
+                    <ol class="ps-3 mb-4">
+                        <li class="mb-2">Open Microsoft Authenticator, Google Authenticator, or another TOTP app.</li>
+                        <li class="mb-2">Scan the QR code.</li>
+                        <li>Enter the current six-digit code below.</li>
+                    </ol>
+                    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+                    <label for="{{ form.code.id_for_label }}" class="form-label fw-semibold">Authenticator code</label>
+                    {% render_field form.code class="form-control form-control-lg mfa-code-input" inputmode="numeric" autocomplete="one-time-code" %}
+                    {% for error in form.code.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                    <div class="form-text">The QR remains valid if this page is refreshed before activation.</div>
+                </div>
+            </div>
+            <div class="border-top mt-4 pt-4">
+                <label for="authenticator_secret" class="form-label fw-semibold">Manual setup key</label>
+                <input id="authenticator_secret" class="form-control mfa-secret" value="{{ form.secret }}" readonly>
+                <div class="form-text">Use this only if your app cannot scan the QR code.</div>
+            </div>
+            <div class="d-flex flex-column flex-sm-row gap-2 justify-content-end mt-4 mfa-actions">
+                <a class="btn btn-outline-secondary" href="{% url 'mfa_index' %}">Cancel</a>
+                <button class="btn btn-primary" type="submit"><i class="fas fa-check me-1"></i> Activate</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

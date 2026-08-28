@@ -1,0 +1,17 @@
+{% extends 'tracking/base.html' %}
+{% load crispy_forms_tags %}
+{% block title %}Retire {{ object.rego }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="page-header">
+    <div><div class="page-eyebrow">Vehicle lifecycle</div><h1>Retire {{ object.rego }}</h1><p class="page-subtitle">Move this vehicle out of daily operations while keeping its complete history.</p></div>
+  </div>
+  <div class="alert alert-warning"><strong>This does not delete the vehicle.</strong> Its records will remain in Vehicle History. The driver and vehicle-linked tools will be detached.</div>
+  <div class="card"><div class="card-body">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}{{ form|crispy }}
+      <div class="d-flex gap-2 mt-3"><button class="btn btn-danger" type="submit">Confirm retirement</button><a class="btn btn-secondary" href="{% url 'car_list' %}">Cancel</a></div>
+    </form>
+  </div></div>
+</div>
+{% endblock %}

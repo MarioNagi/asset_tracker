@@ -5,16 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Koinonia Asset Tracker{% endblock %}</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    <!-- Font Awesome -->
+    <link href="{% static 'css/bootstrap.min.css' %}?v=5.3.3" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=20260812-ui2">
+    {% block extra_css %}{% endblock %}
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
+<body class="app-body">
+    <nav class="navbar navbar-expand-lg navbar-dark app-navbar sticky-top">
+        <div class="container-xl">
             {% if user.is_authenticated %}
                 {% if user.profile.access_level == 'Admin' %}
                     <a class="navbar-brand" href="{% url 'admin_dashboard' %}">
@@ -23,17 +21,17 @@
                 {% else %}
                     <a class="navbar-brand" href="{% url 'user_dashboard' %}">
                 {% endif %}
-                    <img src="{% static 'images/logo.png' %}" alt="Logo" width="30" height="30" class="d-inline-block align-text-top">
-                    Koinonia Asset Tracker
+                    <span class="brand-mark"><img src="{% static 'images/logo.png' %}" alt="" width="32" height="32"></span>
+                    <span class="brand-copy" aria-label="Koinonia Asset Tracker"><strong>Koinonia</strong><small>Asset Tracker</small></span>
                 </a>
             {% else %}
                 <a class="navbar-brand" href="{% url 'login' %}">
-                    <img src="{% static 'images/logo.png' %}" alt="Logo" width="30" height="30" class="d-inline-block align-text-top">
-                    Koinonia Asset Tracker
+                    <span class="brand-mark"><img src="{% static 'images/logo.png' %}" alt="" width="32" height="32"></span>
+                    <span class="brand-copy" aria-label="Koinonia Asset Tracker"><strong>Koinonia</strong><small>Asset Tracker</small></span>
                 </a>
             {% endif %}
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
@@ -42,48 +40,66 @@
                     <ul class="navbar-nav ms-auto">
                         {% if user.profile.access_level == 'Admin' %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'tool_list' %}">Tools</a>
+                                <a class="nav-link" href="{% url 'tool_list' %}"><i class="fas fa-screwdriver-wrench"></i> Tools</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'car_list' %}">Cars</a>
+                                <a class="nav-link" href="{% url 'car_list' %}"><i class="fas fa-car-side"></i> Cars</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'maintenance_list' %}">Maintenance</a>
+                                <a class="nav-link" href="{% url 'maintenance_list' %}"><i class="fas fa-clipboard-check"></i> Maintenance</a>
+                            </li>
+                            <li class="nav-item"><a class="nav-link" href="{% url 'special_maintenance_list' %}"><i class="fas fa-calendar-check"></i> Service plans</a></li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'accident_list' %}"><i class="fas fa-car-burst"></i> Accidents</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'transfer_list' %}">Transfers</a>
+                                <a class="nav-link" href="{% url 'transfer_list' %}"><i class="fas fa-arrow-right-arrow-left"></i> Transfers</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'user_list' %}">Users</a>
+                                <a class="nav-link" href="{% url 'user_list' %}"><i class="fas fa-users"></i> Users</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'fleet_analytics' %}">
                                     <i class="fas fa-chart-line"></i> Analytics
                                 </a>
                             </li>
+                            <li class="nav-item"><a class="nav-link" href="{% url 'odometer_review_list' %}"><i class="fas fa-gauge-high"></i> Reviews</a></li>
                         {% elif user.profile.access_level == 'Manager' %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'manager-cars' %}">Cars</a>
+                                <a class="nav-link" href="{% url 'manager_cars' %}"><i class="fas fa-car-side"></i> Cars</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'manager-tools' %}">Tools</a>
+                                <a class="nav-link" href="{% url 'manager_tools' %}"><i class="fas fa-screwdriver-wrench"></i> Tools</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'transfer_list' %}">Transfers</a>
+                                <a class="nav-link" href="{% url 'accident_list' %}"><i class="fas fa-car-burst"></i> Accidents</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'transfer_list' %}"><i class="fas fa-arrow-right-arrow-left"></i> Transfers</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'fleet_analytics' %}">
                                     <i class="fas fa-chart-line"></i> Analytics
                                 </a>
                             </li>
+                            <li class="nav-item"><a class="nav-link" href="{% url 'special_maintenance_list' %}"><i class="fas fa-calendar-check"></i> Service plans</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{% url 'odometer_review_list' %}"><i class="fas fa-gauge-high"></i> Reviews</a></li>
                         {% else %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'user_cars' %}">My Cars</a>
+                                <a class="nav-link" href="{% url 'user_cars' %}"><i class="fas fa-car-side"></i> My Cars</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'maintenance_list' %}">Maintenance</a>
+                                <a class="nav-link" href="{% url 'maintenance_list' %}"><i class="fas fa-clipboard-check"></i> Maintenance</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'accident_list' %}"><i class="fas fa-car-burst"></i> Accidents</a>
                             </li>
                         {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'mfa_index' %}">
+                                <i class="fas fa-shield-halved"></i> Security
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <form method="post" action="{% url 'logout' %}" class="d-inline">
                                 {% csrf_token %}
@@ -98,10 +114,10 @@
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <main class="container-xl app-shell">
         {% if messages %}
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show app-alert" role="alert">
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -110,10 +126,9 @@
         
         {% block content %}
         {% endblock %}
-    </div>
+    </main>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}?v=5.3.3"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

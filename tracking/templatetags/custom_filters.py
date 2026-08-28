@@ -15,3 +15,11 @@ def sum_attribute(queryset, attr_name):
         return sum(getattr(obj, attr_name) for obj in queryset)
     except (TypeError, ValueError, AttributeError):
         return 0
+
+
+@register.filter
+def user_display(user):
+    """Return a safe display name for an optional assigned user."""
+    if not user:
+        return 'Unassigned'
+    return user.get_full_name().strip() or user.username

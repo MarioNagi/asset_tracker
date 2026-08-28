@@ -4,21 +4,34 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h2>Maintenance Records</h2>
-    
-    <div class="d-flex justify-content-between mb-3">
-        <a href="{% url 'maintenance_add' %}" class="btn btn-primary">Add Maintenance Record</a>
+    <div class="page-header">
+        <div><div class="page-eyebrow">Essential workflow</div><h1>Maintenance</h1><p class="page-subtitle">Review service history, costs, suppliers, and invoice records.</p></div>
+        {% if user.is_superuser or user.profile.access_level == 'Admin' or user.profile.access_level == 'Manager' %}
+        <div class="d-flex flex-column flex-sm-row gap-2">
+            <a href="{% url 'maintenance_add' %}" class="btn btn-primary"><i class="fas fa-plus me-1"></i> Add record</a>
+            <a href="{% url 'pdf_invoice_import' %}" class="btn btn-outline-primary">
+                <i class="fas fa-file-pdf me-1"></i> Import invoice
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="small text-muted">Filtered records</div><div class="metric-value">{{ maintenance_summary.record_count }}</div></div></div></div>
+        <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="small text-muted">Recorded cost</div><div class="metric-value">${{ maintenance_summary.total_cost|floatformat:2 }}</div></div></div></div>
+        <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="small text-muted">Invoice references</div><div class="metric-value">{{ maintenance_summary.invoice_count }}</div></div></div></div>
+        <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="small text-muted">Documents</div><div class="metric-value">{{ maintenance_summary.document_count }}</div></div></div></div>
     </div>
 
     <!-- Filters -->
-    <div class="card mb-3">
+    <div class="card filter-card">
         <div class="card-header">
             <h5 class="mb-0">Filters</h5>
         </div>
         <div class="card-body">
             <form method="get" class="row g-3">
                 <div class="col-md-4">
-                    <label for="rego" class="form-label">Filter by Car (Rego)</label>
+                    <label for="rego" class="form-label">Vehicle</label>
                     <select name="rego" id="rego" class="form-select">
                         <option value="">All Cars</option>
                         {% for rego in regos %}
@@ -26,6 +39,24 @@
                             {{ rego }}
                         </option>
                         {% endfor %}
+                    </select>
+                </div>
+                   <div class="col-md-4">
+                       <label for="service_provider" class="form-label">Service provider</label>
+                       <select name="service_provider" id="service_provider" class="form-select">
+                           <option value="">All Providers</option>
+                           {% for provider in service_providers %}
+                           <option value="{{ provider }}" {% if request.GET.service_provider == provider %}selected{% endif %}>
+                               {{ provider }}
+                           </option>
+                           {% endfor %}
+                       </select>
+                   </div>
+                <div class="col-md-4">
+                    <label for="service_type" class="form-label">Service type</label>
+                    <select name="service_type" id="service_type" class="form-select">
+                        <option value="">All types</option>
+                        {% for value, label in service_types %}<option value="{{ value }}" {% if request.GET.service_type == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
                     </select>
                 </div>
                 <div class="col-12">
@@ -36,7 +67,7 @@
         </div>
     </div>
 
-    <table class="table table-striped mt-3">
+    <div class="table-responsive"><table class="table table-striped table-hover">
         <thead>
             <tr>
                 <th>Car</th>
@@ -52,7 +83,7 @@
         <tbody>
             {% for record in maintenance_records %}
             <tr>
-                <td>{{ record.car.rego }}</td>
+                <td><a href="{% url 'car_detail' record.car.pk %}"><strong>{{ record.car.rego }}</strong></a><div class="small text-muted">{{ record.car.make }} {{ record.car.model }}</div></td>
                 <td>{{ record.service_date }}</td>
                 <td>{{ record.get_service_type_display }}</td>
                 <td>{{ record.service_provider }}</td>
@@ -66,8 +97,13 @@
                 </td>
                 <td>${{ record.total_cost }}</td>
                 <td>
+                    <a href="{% url 'maintenance_detail' record.pk %}" class="btn btn-sm btn-secondary">View</a>
+                    {% if user.is_superuser or user.profile.access_level == 'Admin' or user.profile.access_level == 'Manager' %}
                     <a href="{% url 'maintenance_edit' record.pk %}" class="btn btn-sm btn-warning">Edit</a>
+                    {% endif %}
+                    {% if user.is_superuser or user.profile.access_level == 'Admin' %}
                     <a href="{% url 'maintenance_delete' record.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                    {% endif %}
                 </td>
             </tr>
             {% empty %}
@@ -76,6 +112,7 @@
             </tr>
             {% endfor %}
         </tbody>
-    </table>
+    </table></div>
+  {% include 'tracking/_pagination.html' %}
 </div>
 {% endblock %}

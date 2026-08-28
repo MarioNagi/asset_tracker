@@ -1,0 +1,19 @@
+{% extends 'tracking/base.html' %}
+{% block title %}Maintenance · {{ maintenance.car.rego }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="page-header"><div><div class="page-eyebrow">Maintenance record</div><h1>{{ maintenance.get_service_type_display }}</h1><p class="page-subtitle"><a href="{% url 'car_detail' maintenance.car.pk %}">{{ maintenance.car.rego }} · {{ maintenance.car.make }} {{ maintenance.car.model }}</a> · {{ maintenance.service_date }}</p></div><div class="d-flex flex-wrap gap-2"><a class="btn btn-secondary" href="{% url 'maintenance_list' %}?rego={{ maintenance.car.rego|urlencode }}">Vehicle maintenance</a>{% if user.is_superuser or user.profile.access_level == 'Admin' or user.profile.access_level == 'Manager' %}<a class="btn btn-primary" href="{% url 'maintenance_edit' maintenance.pk %}"><i class="fas fa-pen me-1"></i> Edit record</a>{% endif %}</div></div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="card h-100"><div class="card-body"><div class="small text-muted">Vehicle</div><a href="{% url 'car_detail' maintenance.car.pk %}"><strong>{{ maintenance.car.rego }}</strong></a><div>{{ maintenance.car.make }} {{ maintenance.car.model }}</div></div></div></div>
+    <div class="col-md-3"><div class="card h-100"><div class="card-body"><div class="small text-muted">Service date</div><strong>{{ maintenance.service_date }}</strong><div>{{ maintenance.odometer_reading }} km</div></div></div></div>
+    <div class="col-md-3"><div class="card h-100"><div class="card-body"><div class="small text-muted">Provider</div><strong>{{ maintenance.service_provider }}</strong><div>Invoice {{ maintenance.invoice_number|default:'—' }}</div></div></div></div>
+    <div class="col-md-3"><div class="card h-100"><div class="card-body"><div class="small text-muted">Recorded total</div><div class="metric-value">${{ maintenance.total_cost|floatformat:2 }}</div></div></div></div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-8"><div class="card mb-4"><div class="card-header"><h5 class="mb-0">Work summary</h5></div><div class="card-body"><p class="mb-0">{{ maintenance.description|default:'No description recorded.'|linebreaksbr }}</p></div></div><div class="card"><div class="card-header d-flex justify-content-between"><h5 class="mb-0">Line items</h5><strong>${{ line_item_total|floatformat:2 }}</strong></div><div class="table-responsive"><table class="table mb-0"><thead><tr><th>Type</th><th>Description</th><th>Quantity</th><th>Unit cost</th><th>Total</th></tr></thead><tbody>{% for item in maintenance.items.all %}<tr><td>{{ item.get_item_type_display }}</td><td>{{ item.description }}</td><td>{{ item.quantity }}</td><td>${{ item.unit_cost|floatformat:2 }}</td><td>${{ item.total_cost|floatformat:2 }}</td></tr>{% empty %}<tr><td colspan="5" class="text-center py-4">No line items were recorded.</td></tr>{% endfor %}</tbody></table></div></div></div>
+    <div class="col-lg-4"><div class="card"><div class="card-header"><h5 class="mb-0">Invoice and document</h5></div><div class="card-body"><div class="small text-muted">Invoice number</div><p><strong>{{ maintenance.invoice_number|default:'—' }}</strong></p><div class="small text-muted">Attached document</div>{% if maintenance.documents %}<a class="btn btn-outline-primary w-100 mt-2" href="{% url 'maintenance_document' maintenance.pk %}"><i class="fas fa-file-arrow-down me-1"></i> Download document</a>{% else %}<p class="mb-0"><strong>No document attached</strong></p>{% endif %}</div></div></div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Account Security{% endblock %} | Koinonia Asset Tracker</title>
+    <link href="{% static 'css/bootstrap.min.css' %}?v=5.3.3" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=20260812-ui2">
+    <link rel="stylesheet" href="{% static 'css/mfa.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="mfa-auth-page">
+    <nav class="navbar navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'login' %}">
+                <img src="{% static 'images/logo.png' %}" alt="Logo" width="30" height="30" class="d-inline-block align-text-top">
+                Koinonia Asset Tracker
+            </a>
+        </div>
+    </nav>
+    <main class="mfa-auth-main">
+        <div class="card mfa-card mfa-auth-card">
+            <div class="card-body p-4 p-sm-5">
+                <div class="text-center mb-4">
+                    <span class="mfa-page-icon mx-auto mb-3"><i class="fas fa-shield-halved fa-lg"></i></span>
+                    <h1 class="h3 mb-2">{% block auth_title %}Verify your identity{% endblock %}</h1>
+                    <p class="text-muted mb-0">{% block auth_subtitle %}Complete the security check to continue.{% endblock %}</p>
+                </div>
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+                {% block auth_content %}{% endblock %}
+            </div>
+        </div>
+    </main>
+</body>
+</html>

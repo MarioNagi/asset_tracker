@@ -19,8 +19,24 @@ app.conf.beat_schedule = {
         'task': 'tracking.tasks.check_maintenance_schedule',
         'schedule': crontab(hour=9, minute=30),  # Run daily at 9:30 AM
     },
-    'check-tire-schedule': {
-        'task': 'tracking.tasks.check_tire_schedule',
+    'send-calibration-reminders': {
+        'task': 'tracking.tasks.send_calibration_reminders',
         'schedule': crontab(hour=10, minute=0),  # Run daily at 10 AM
+    },
+    'send-retirement-task-reminders': {
+        'task': 'tracking.tasks.send_retirement_task_reminders',
+        'schedule': crontab(hour=10, minute=30),
+    },
+    'send-transfer-follow-up-reminders': {
+        'task': 'tracking.tasks.send_transfer_follow_up_reminders',
+        'schedule': crontab(hour=11, minute=0),
+    },
+    'send-special-maintenance-reminders': {
+        'task': 'tracking.tasks.send_special_maintenance_reminders',
+        'schedule': crontab(hour=10, minute=45),
+    },
+    'send-weekly-odometer-reminders': {
+        'task': 'tracking.tasks.send_weekly_odometer_reminders',
+        'schedule': crontab(hour=11, minute=15),
     },
 }

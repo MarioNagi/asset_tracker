@@ -5,14 +5,50 @@
 {% block title %}Add Tool{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2>{% if form.instance.pk %}Edit Tool{% else %}Add Tool{% endif %}</h2>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form|crispy }}
-        <button type="submit" class="btn btn-primary">Save Tool</button>
-        <a href="{% url 'tool_list' %}" class="btn btn-secondary">Cancel</a>
-    </form>
+<div class="form-page">
+    <div class="page-header"><div><div class="page-eyebrow">Asset register</div><h1>{% if form.instance.pk %}Edit tool{% else %}Add tool{% endif %}</h1><p class="page-subtitle">Record equipment identification, location, assignment, and calibration details.</p></div></div>
+    <div class="card"><div class="card-body p-4">
+        <div class="alert alert-light border"><strong>Controlled devices:</strong> Admins can classify rare, shared, important, or high-value equipment. These devices require an internal number, serial number, photograph, condition, and exactly one current employee or company location. If calibration is required, enter the next due date.</div>
+        {% if user.is_superuser or user.profile.access_level == 'Admin' %}<div class="d-flex justify-content-end mb-3"><a class="btn btn-secondary btn-sm" href="{% url 'tool_catalogue_list' %}"><i class="fas fa-list me-1"></i> Manage tool catalogue</a></div>{% endif %}
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <datalist id="tool-catalogue-options">
+                {% for item in form.catalogue_items %}<option value="{{ item.name }}" data-controlled="{{ item.suggested_controlled|yesno:'yes,no' }}" data-calibration="{{ item.suggested_calibration_required|yesno:'yes,no' }}"></option>{% endfor %}
+            </datalist>
+            <div id="catalogue-suggestion" class="alert alert-info d-none" role="status"></div>
+            <div class="form-actions"><button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save tool</button><a href="{% url 'tool_list' %}" class="btn btn-secondary">Cancel</a></div>
+        </form>
+    </div></div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(() => {
+    const field = document.getElementById('id_tool_name');
+    const suggestion = document.getElementById('catalogue-suggestion');
+    if (!field || !suggestion) return;
+    const refreshSuggestion = () => {
+        const options = [...document.querySelectorAll('#tool-catalogue-options option')];
+        const selected = options.find(option => option.value.toLowerCase() === field.value.trim().toLowerCase());
+        if (!selected) {
+            suggestion.classList.add('d-none');
+            suggestion.textContent = '';
+            return;
+        }
+        const recommendations = [];
+        if (selected.dataset.controlled === 'yes') recommendations.push('Controlled device');
+        if (selected.dataset.calibration === 'yes') recommendations.push('Calibration required');
+        suggestion.textContent = recommendations.length
+            ? `Catalogue suggestion: ${recommendations.join(' and ')}. Review and confirm the checkboxes before saving.`
+            : 'Catalogue suggestion: ordinary tool with no mandatory calibration. Review the settings before saving.';
+        suggestion.classList.remove('d-none');
+    };
+    field.addEventListener('input', refreshSuggestion);
+    field.addEventListener('change', refreshSuggestion);
+    refreshSuggestion();
+})();
+</script>
 {% endblock %}
 

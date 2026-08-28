@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 import pdfplumber
-import PyPDF2
+from pypdf import PdfReader
 from io import BytesIO
 
 logger = logging.getLogger(__name__)
@@ -131,7 +131,7 @@ class PDFInvoiceParser:
         """Parse PDF using PyPDF2 library as fallback"""
         try:
             with open(pdf_path, 'rb') as file:
-                reader = PyPDF2.PdfReader(file)
+                reader = PdfReader(file)
                 text = ""
                 
                 for page in reader.pages:

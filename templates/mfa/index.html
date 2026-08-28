@@ -1,0 +1,62 @@
+{% extends "mfa/manage_base.html" %}
+
+{% block title %}Security{% endblock %}
+{% block mfa_title %}Account Security{% endblock %}
+{% block mfa_subtitle %}Manage Two-Factor Authentication and emergency recovery access.{% endblock %}
+
+{% block mfa_content %}
+<div class="card mfa-card">
+    <div class="card-body p-4">
+        <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
+            {% if authenticators.totp %}
+                <span class="mfa-status-icon bg-success-subtle text-success"><i class="fas fa-check"></i></span>
+                <div class="flex-grow-1">
+                    <h2 class="h5 mb-1">Authenticator app is active</h2>
+                    <p class="text-muted mb-0">A six-digit code is required when you sign in.</p>
+                </div>
+                <a class="btn btn-outline-danger" href="{% url 'mfa_deactivate_totp' %}"><i class="fas fa-ban me-1"></i> Deactivate</a>
+            {% else %}
+                <span class="mfa-status-icon bg-warning-subtle text-warning"><i class="fas fa-triangle-exclamation"></i></span>
+                <div class="flex-grow-1">
+                    <h2 class="h5 mb-1">Authenticator app is not active</h2>
+                    <p class="text-muted mb-0">Activate two-factor authentication to protect this account.</p>
+                </div>
+                <a class="btn btn-primary" href="{% url 'mfa_activate_totp' %}"><i class="fas fa-shield-halved me-1"></i> Activate</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if "recovery_codes" in MFA_SUPPORTED_TYPES %}
+{% with total_count=authenticators.recovery_codes.generate_codes|length unused_count=authenticators.recovery_codes.get_unused_codes|length %}
+<div class="card mfa-card">
+    <div class="card-body p-4">
+        <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
+            <span class="mfa-status-icon bg-primary-subtle text-primary"><i class="fas fa-key"></i></span>
+            <div class="flex-grow-1">
+                <h2 class="h5 mb-1">Recovery codes</h2>
+                {% if authenticators.recovery_codes %}
+                    <p class="text-muted mb-0">{{ unused_count }} of {{ total_count }} emergency codes remain available.</p>
+                {% else %}
+                    <p class="text-muted mb-0">Generate codes to regain access if your authenticator device is unavailable.</p>
+                {% endif %}
+            </div>
+            {% if is_mfa_enabled %}
+            <div class="d-flex flex-column flex-sm-row gap-2 mfa-actions">
+                {% if authenticators.recovery_codes and unused_count > 0 and not MFA_RECOVERY_CODES_SHOW_ONCE %}
+                    <a class="btn btn-outline-primary" href="{% url 'mfa_view_recovery_codes' %}">View</a>
+                    <a class="btn btn-outline-secondary" href="{% url 'mfa_download_recovery_codes' %}">Download</a>
+                {% endif %}
+                <a class="btn btn-secondary" href="{% url 'mfa_generate_recovery_codes' %}">Generate new</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endwith %}
+{% endif %}
+
+<div class="alert alert-info mt-4 mb-0">
+    <i class="fas fa-circle-info me-2"></i>Keep recovery codes somewhere separate from your phone and never share verification codes.
+</div>
+{% endblock %}

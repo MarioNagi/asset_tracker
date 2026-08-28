@@ -1,17 +1,25 @@
 {% extends 'tracking/base.html' %}
+{% load custom_filters %}
 
 {% block title %}Cars{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
-    <h2>Cars</h2>
-    <div class="d-flex justify-content-between mb-3">
-        <a href="{% url 'car_add' %}" class="btn btn-primary">Add Car</a>
-        <a href="{% url 'import' %}?type=Car" class="btn btn-secondary">Upload CSV</a>
+    <div class="page-header">
+        <div><div class="page-eyebrow">Fleet register</div><h1>Vehicles</h1><p class="page-subtitle">Manage vehicle details, ownership, registration, and assignments.</p></div>
+        <div class="d-flex flex-column flex-sm-row gap-2">
+        {% if user.is_superuser or user.profile.access_level == 'Admin' or user.profile.access_level == 'Manager' %}
+        <a href="{% url 'car_add' %}" class="btn btn-primary"><i class="fas fa-plus me-1"></i> Add vehicle</a>
+        <a href="{% url 'vehicle_history' %}" class="btn btn-secondary"><i class="fas fa-clock-rotate-left me-1"></i> Vehicle history</a>
+        {% endif %}
+        {% if user.is_superuser or user.profile.access_level == 'Admin' %}
+        <a href="{% url 'import' %}?type=Car" class="btn btn-secondary"><i class="fas fa-file-import me-1"></i> Import file</a>
+        {% endif %}
+        </div>
     </div>
 
     <!-- Filters -->
-    <div class="card mb-3">
+    <div class="card filter-card">
         <div class="card-header">
             <h5 class="mb-0">Filters</h5>
         </div>
@@ -58,7 +66,7 @@
         </div>
     </div>
 
-    <table class="table table-striped mt-3">
+    <div class="table-responsive"><table class="table table-striped table-hover">
         <thead>
             <tr>
                 <th>Rego</th>
@@ -84,10 +92,15 @@
                 <td>{{ car.state }}</td>
                 <td>{{ car.purchase_date }}</td>
                 <td>${{ car.purchase_price }}</td>
-                <td>{{ car.assigned_user.get_full_name }}</td>
+                <td>{{ car.assigned_user|user_display }}</td>
                 <td>
+                    <a href="{% url 'car_detail' car.pk %}" class="btn btn-sm btn-secondary">View</a>
+                    {% if user.is_superuser or user.profile.access_level == 'Admin' or user.profile.access_level == 'Manager' %}
                     <a href="{% url 'car_edit' car.pk %}" class="btn btn-sm btn-warning">Edit</a>
-                    <a href="{% url 'car_delete' car.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                    {% endif %}
+                    {% if user.is_superuser or user.profile.access_level == 'Admin' %}
+                    <a href="{% url 'car_delete' car.pk %}" class="btn btn-sm btn-danger">Retire</a>
+                    {% endif %}
                 </td>
             </tr>
             {% empty %}
@@ -96,6 +109,7 @@
             </tr>
             {% endfor %}
         </tbody>
-    </table>
+    </table></div>
+  {% include 'tracking/_pagination.html' %}
 </div>
 {% endblock %}

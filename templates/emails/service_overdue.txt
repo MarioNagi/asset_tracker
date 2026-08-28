@@ -1,0 +1,28 @@
+URGENT: SERVICE OVERDUE - {{ car.rego }}
+
+Hello {{ user_name }},
+
+🚨 URGENT: Your vehicle has exceeded its scheduled service interval and requires immediate attention.
+
+Vehicle Information:
+- Vehicle: {{ car.make }} {{ car.model }}
+- Registration: {{ car.rego }}
+{% if car.assigned_user %}- Assigned to: {{ car.assigned_user.get_full_name }}{% endif %}
+
+Odometer Information:
+- Current Odometer: {{ current_odometer|floatformat:0 }} km
+- Service Was Due At: {{ service_odometer|floatformat:0 }} km
+- Kilometers Overdue: {{ current_odometer|add:"-"|add:service_odometer|floatformat:0 }} km
+
+IMMEDIATE ACTION REQUIRED:
+This vehicle is overdue for service and should be taken off the road until serviced.
+
+What to do NOW:
+1. DO NOT DRIVE this vehicle until it has been serviced
+2. Contact your service provider immediately
+3. Schedule an emergency service appointment
+4. Update the service odometer after completing the service
+
+---
+This is an automated notification from Koinonia Enterprises Asset Tracker.
+Please do not reply to this email.

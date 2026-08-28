@@ -1,0 +1,27 @@
+SERVICE DUE SOON - {{ car.rego }}
+
+Hello {{ user_name }},
+
+WARNING: Your vehicle is approaching its scheduled service interval.
+
+Vehicle Information:
+- Vehicle: {{ car.make }} {{ car.model }}
+- Registration: {{ car.rego }}
+{% if car.assigned_user %}- Assigned to: {{ car.assigned_user.get_full_name }}{% endif %}
+
+Odometer Information:
+- Current Odometer: {{ current_odometer|floatformat:0 }} km
+- Service Due At: {{ service_odometer|floatformat:0 }} km
+- Kilometers Remaining: {{ km_until_service|floatformat:0 }} km
+
+ACTION REQUIRED:
+Please schedule a service appointment soon. The vehicle is within {{ warning_km }} kilometers of its service interval.
+
+What to do:
+1. Contact your preferred service provider
+2. Book an appointment before the service odometer is reached
+3. Update the service odometer after completing the service
+
+---
+This is an automated notification from Koinonia Enterprises Asset Tracker.
+Please do not reply to this email.

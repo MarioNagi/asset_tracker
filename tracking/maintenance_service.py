@@ -5,6 +5,7 @@ import logging
 
 from .models import Car, Maintenance, MaintenanceItem
 from .pdf_invoice_parser import PDFInvoiceParser, InvoiceData, validate_invoice_data
+from .invoice_utils import normalize_invoice_number
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,8 @@ class MaintenanceInvoiceService:
             invoice_data = self.pdf_parser.parse_pdf(pdf_path)
             if not invoice_data:
                 return False, "Failed to parse PDF invoice", None
+
+            invoice_data.invoice_number = normalize_invoice_number(invoice_data.invoice_number)
             
             # Validate that we have items to import
             if not invoice_data.items:
@@ -68,6 +71,9 @@ class MaintenanceInvoiceService:
             ValidationError: If car not found and auto_create_car is False
         """
         with transaction.atomic():
+            invoice_number = normalize_invoice_number(invoice_data.invoice_number)
+            invoice_data.invoice_number = invoice_number
+
             # Get or create the car
             car = self._get_or_create_car(invoice_data, auto_create_car)
             
@@ -84,20 +90,20 @@ class MaintenanceInvoiceService:
             
             if skip_existing:
                 # Check if maintenance record already exists and skip if it does
-                if Maintenance.objects.filter(invoice_number=invoice_data.invoice_number).exists():
+                if Maintenance.objects.filter(invoice_number=invoice_number).exists():
                     logger.info(f"Skipped existing invoice {invoice_data.invoice_number}")
                     return None
                 
                 # Create new maintenance record
                 maintenance = Maintenance.objects.create(
-                    invoice_number=invoice_data.invoice_number,
+                    invoice_number=invoice_number,
                     **maintenance_data
                 )
                 created = True
             else:
                 # Use update_or_create to handle both new and existing records
                 maintenance, created = Maintenance.objects.update_or_create(
-                    invoice_number=invoice_data.invoice_number,
+                    invoice_number=invoice_number,
                     defaults=maintenance_data
                 )
                 
@@ -147,7 +153,6 @@ class MaintenanceInvoiceService:
             car = Car.objects.create(
                 rego=invoice_data.vehicle_rego,
                 rego_expiry_date=timezone.now().date() + timedelta(days=365),  # Default to 1 year from now
-                maintenance_sticker_date=timezone.now().date() + timedelta(days=180),  # Default to 6 months from now
                 vin_number=invoice_data.vehicle_vin or f"VIN-{invoice_data.vehicle_rego}",  # Use rego as fallback for VIN
                 make='Unknown',
                 model='Unknown'
@@ -181,29 +186,32 @@ class MaintenanceInvoiceService:
         elif any(keyword in all_descriptions for keyword in ['repair', 'fix', 'replace']):
             return 'repair'
         elif any(keyword in all_descriptions for keyword in ['brake', 'brakes']):
-            return 'brake'
+            return 'repair'
         elif any(keyword in all_descriptions for keyword in ['tire', 'tyre', 'wheel']):
-            return 'tire'
+            return 'repair'
         elif any(keyword in all_descriptions for keyword in ['inspection', 'check']):
             return 'inspection'
         else:
             return 'regular'
     
-    def batch_import_pdfs(self, pdf_paths: List[str], auto_create_car: bool = False) -> List[Tuple[str, bool, str]]:
+    def batch_import_pdfs(
+        self, pdf_paths: List[str], auto_create_car: bool = False, skip_existing: bool = False
+    ) -> List[Tuple[str, bool, str]]:
         """
         Import multiple PDF invoices
         
         Args:
             pdf_paths: List of PDF file paths
             auto_create_car: Whether to create cars if not found
-            
+            skip_existing: If True, skip invoices that already exist instead of updating
+
         Returns:
             List of tuples (file_path, success, message)
         """
         results = []
         
         for pdf_path in pdf_paths:
-            success, message, _ = self.import_pdf_invoice(pdf_path, auto_create_car)
+            success, message, _ = self.import_pdf_invoice(pdf_path, auto_create_car, skip_existing)
             results.append((pdf_path, success, message))
             
             if success:
@@ -239,6 +247,8 @@ class MaintenanceInvoiceService:
             invoice_data = self.pdf_parser.parse_pdf(pdf_path)
             if not invoice_data:
                 return False, ["Failed to parse PDF"]
+
+            invoice_data.invoice_number = normalize_invoice_number(invoice_data.invoice_number)
             
             errors = validate_invoice_data(invoice_data)
             
@@ -246,10 +256,6 @@ class MaintenanceInvoiceService:
             if invoice_data.vehicle_rego:
                 if not Car.objects.filter(rego=invoice_data.vehicle_rego).exists():
                     errors.append(f"Car with registration {invoice_data.vehicle_rego} not found in database")
-            
-            if invoice_data.invoice_number:
-                if Maintenance.objects.filter(invoice_number=invoice_data.invoice_number).exists():
-                    errors.append(f"Invoice {invoice_data.invoice_number} already exists in database")
             
             return len(errors) == 0, errors
             

@@ -1,0 +1,6 @@
+{% extends 'tracking/base.html' %}
+{% load crispy_forms_tags %}
+{% block title %}{% if form.instance.pk %}Edit Tool Type{% else %}Add Tool Type{% endif %}{% endblock %}
+{% block content %}
+<div class="form-page"><div class="page-header"><div><div class="page-eyebrow">Tool catalogue</div><h1>{% if form.instance.pk %}Edit tool type{% else %}Add tool type{% endif %}</h1><p class="page-subtitle">Review the canonical name and any handling suggestions before making it available.</p></div></div><div class="card"><div class="card-body p-4"><div class="alert alert-light border">Use one clear singular name. Case-only and spacing-only duplicates are rejected. Suggestions guide the operator but do not silently classify an asset.</div><form method="post">{% csrf_token %}{{ form|crispy }}<div class="form-actions"><button class="btn btn-primary" type="submit">Save tool type</button><a class="btn btn-secondary" href="{% url 'tool_catalogue_list' %}">Cancel</a></div></form></div></div></div>
+{% endblock %}

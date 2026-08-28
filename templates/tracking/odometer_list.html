@@ -37,8 +37,8 @@
                 <td>{{ reading.reading_value }}</td>
                 <td>
                     {% if user.is_superuser or user.is_staff %}
-                    <a href="{% url 'odometer-edit' reading.pk %}" class="btn btn-sm btn-warning">Edit</a>
-                    <a href="{% url 'odometer-delete' reading.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                    <a href="{% url 'odometer_edit' reading.pk %}" class="btn btn-sm btn-warning">Edit</a>
+                    <a href="{% url 'odometer_delete' reading.pk %}" class="btn btn-sm btn-danger">Delete</a>
                     {% endif %}
                 </td>
             </tr>
@@ -49,5 +49,6 @@
             {% endfor %}
         </tbody>
     </table>
+  {% include 'tracking/_pagination.html' %}
 </div>
 {% endblock %}

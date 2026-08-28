@@ -1,11 +1,19 @@
 {% extends 'tracking/base.html' %}
 {% load fleet_extras %}
+{% load custom_filters %}
 {% block title %}Fleet Analytics{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
+    <div class="page-header">
+        <div>
+            <div class="page-eyebrow">Fleet intelligence</div>
+            <h1>Fleet analytics</h1>
+            <p class="page-subtitle">Understand fleet costs, service exposure, and vehicle performance.</p>
+        </div>
+    </div>
     <!-- Filters -->
-    <div class="card mb-3">
+    <div class="card filter-card">
         <div class="card-header">
             <h5 class="mb-0">Filters</h5>
         </div>
@@ -30,64 +38,77 @@
         </div>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Fleet Analytics</h2>
-        <div class="btn-group">
-            <div class="dropdown me-2">
-                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+        <h2 class="h4 mb-0">Reports</h2>
+        <div class="d-flex flex-column flex-sm-row gap-2 align-items-stretch align-items-sm-start">
+            <div class="dropdown">
+                <button class="btn btn-primary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
                     Export Monthly Report
                 </button>
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="{% url 'generate_report' %}?type=excel&period=monthly">Excel</a></li>
-                    <li><a class="dropdown-item" href="{% url 'generate_report' %}?type=csv&period=monthly">CSV</a></li>
+                    <li><a class="dropdown-item" href="{% url 'generate_report' %}?type=excel&amp;period=monthly{% if request.GET.rego %}&amp;rego={{ request.GET.rego|urlencode }}{% endif %}">Excel</a></li>
+                    <li><a class="dropdown-item" href="{% url 'generate_report' %}?type=csv&amp;period=monthly{% if request.GET.rego %}&amp;rego={{ request.GET.rego|urlencode }}{% endif %}">CSV</a></li>
                 </ul>
             </div>
             <div class="dropdown">
-                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <button class="btn btn-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
                     Export Yearly Report
                 </button>
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="{% url 'generate_report' %}?type=excel&period=yearly">Excel</a></li>
-                    <li><a class="dropdown-item" href="{% url 'generate_report' %}?type=csv&period=yearly">CSV</a></li>
+                    <li><a class="dropdown-item" href="{% url 'generate_report' %}?type=excel&amp;period=yearly{% if request.GET.rego %}&amp;rego={{ request.GET.rego|urlencode }}{% endif %}">Excel</a></li>
+                    <li><a class="dropdown-item" href="{% url 'generate_report' %}?type=csv&amp;period=yearly{% if request.GET.rego %}&amp;rego={{ request.GET.rego|urlencode }}{% endif %}">CSV</a></li>
                 </ul>
             </div>
         </div>
     </div>
 
     <!-- Fleet Overview Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-5 g-3 mb-4">
+        <div class="col">
+            <div class="card metric-card h-100" style="--metric:#2563eb;--metric-soft:#dbeafe">
                 <div class="card-body">
-                    <h5 class="card-title">Total Vehicles</h5>
-                    <h2>{{ total_cars }}</h2>
+                    <span class="metric-icon"><i class="fas fa-car-side"></i></span><div class="metric-value">{{ total_cars }}</div><div class="metric-label">Total vehicles</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-white">
+        <div class="col">
+            <div class="card metric-card h-100" style="--metric:#d97706;--metric-soft:#fef3c7">
                 <div class="card-body">
-                    <h5 class="card-title">Maintenance Cost (YTD)</h5>
-                    <h2>${{ total_maintenance_cost|floatformat:2 }}</h2>
+                    <span class="metric-icon"><i class="fas fa-clipboard-check"></i></span><div class="metric-value">${{ total_maintenance_cost|floatformat:2 }}</div><div class="metric-label">Maintenance YTD</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white">
+        <div class="col">
+            <div class="card metric-card h-100" style="--metric:#dc2626;--metric-soft:#fee2e2">
                 <div class="card-body">
-                    <h5 class="card-title">Fuel Cost (YTD)</h5>
+                    <span class="metric-icon"><i class="fas fa-car-burst"></i></span><div class="metric-value">${{ total_accident_cost|floatformat:2 }}</div><div class="metric-label">Accident Cost (YTD)</div>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card metric-card h-100" style="--metric:#059669;--metric-soft:#d1fae5">
+                <div class="card-body">
+                    <span class="metric-icon"><i class="fas fa-dollar-sign"></i></span><div class="metric-value">${{ total_fleet_cost|floatformat:2 }}</div><div class="metric-label">Recorded fleet cost YTD</div>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card metric-card h-100" style="--metric:#7c3aed;--metric-soft:#ede9fe">
+                <div class="card-body">
+                    <span class="metric-icon"><i class="fas fa-triangle-exclamation"></i></span><div class="metric-value">{{ service_due_cars|length }}</div><div class="metric-label">Service attention</div>
+                </div>
+            </div>
+        </div>
+        {% if has_fuel_data %}
+        <div class="col">
+            <div class="card bg-info text-dark h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Fuel Cost (YTD) <span class="badge bg-light text-dark">Optional</span></h5>
                     <h2>${{ total_fuel_cost|floatformat:2 }}</h2>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-danger text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Service Due</h5>
-                    <h2>{{ service_due_cars|length }}</h2>
-                </div>
-            </div>
-        </div>
+        {% endif %}
     </div>
 
     <!-- Service Status Overview -->
@@ -113,7 +134,7 @@
                         {% for car in service_due_cars %}
                         <tr>
                             <td>{{ car.rego }} ({{ car.make }} {{ car.model }})</td>
-                            <td>{{ car.assigned_user.get_full_name|default:"Unassigned" }}</td>
+                            <td>{{ car.assigned_user|user_display }}</td>
                             <td>{{ car.current_odometer|floatformat:0 }} km</td>
                             <td>{{ car.service_odometer|floatformat:0 }} km</td>
                             <td>
@@ -166,7 +187,7 @@
                         {% for car in cars %}
                         <tr>
                             <td>{{ car.rego }} ({{ car.make }} {{ car.model }})</td>
-                            <td>{{ car.assigned_user.get_full_name|default:"Unassigned" }}</td>
+                            <td>{{ car.assigned_user|user_display }}</td>
                             <td>{{ car.current_odometer|floatformat:0 }} km</td>
                             <td>{{ car.service_odometer|floatformat:0 }} km</td>
                             <td>
@@ -327,6 +348,7 @@
     // Parse the Django template variables into JavaScript variables
     const monthlyMaintenanceCosts = JSON.parse('{{ monthly_maintenance_costs|escapejs }}');
     const monthlyFuelCosts = JSON.parse('{{ monthly_fuel_costs|escapejs }}');
+    const monthlyAccidentCosts = JSON.parse('{{ monthly_accident_costs|escapejs }}');
     const vehicleLabels = JSON.parse('{{ vehicle_labels|escapejs }}');
     const vehicleCosts = JSON.parse('{{ vehicle_costs|escapejs }}');
 
@@ -344,12 +366,19 @@
                 borderWidth: 1
             },
             {
+                label: 'Accident Cost ($)',
+                data: monthlyAccidentCosts,
+                backgroundColor: 'rgba(220, 53, 69, 0.2)',
+                borderColor: 'rgba(220, 53, 69, 1)',
+                borderWidth: 1
+            }{% if has_fuel_data %},
+            {
                 label: 'Fuel Cost ($)',
                 data: monthlyFuelCosts,
                 backgroundColor: 'rgba(23, 162, 184, 0.2)',
                 borderColor: 'rgba(23, 162, 184, 1)',
                 borderWidth: 1
-            }]
+            }{% endif %}]
         },
         options: {
             responsive: true,

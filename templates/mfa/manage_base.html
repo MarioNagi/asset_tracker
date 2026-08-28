@@ -1,0 +1,19 @@
+{% extends "tracking/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mfa.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="mfa-shell">
+    <div class="mfa-page-header">
+        <span class="mfa-page-icon"><i class="fas fa-shield-halved fa-lg"></i></span>
+        <div>
+            <h1 class="h2 mb-1">{% block mfa_title %}Account Security{% endblock %}</h1>
+            <p class="text-muted mb-0">{% block mfa_subtitle %}Protect your company account and recovery access.{% endblock %}</p>
+        </div>
+    </div>
+    {% block mfa_content %}{% endblock %}
+</section>
+{% endblock %}

@@ -1,87 +1,59 @@
+# Local configuration and generated dependency environments
+/.env
+/.venv/
+/.runtime-packages/
+/.security-audit-tools/
+
+# Python/runtime output
+**/__pycache__/
+*.py[cod]
+*.log
+/staticfiles/
+
+# Operational databases, archives, backups, and uploads
+# These may contain company data, password hashes, invoices, or photographs.
+*.sqlite3
+*.sqlite3-*
+*.sqlite3-journal
+*.db
+*.backup-*
+*.rar
+*.zip
+/backups/
+/invoices/
+/media/
+
+# Operational exports and import workbooks
+*.xlsx
+*.csv
+!tracking/test_fixtures/*.xlsx
+!tracking/test_fixtures/*.csv
+
+# Local one-off investigation scripts
 analyze_all_invoice_formats.py
 analyze_new_invoice.py
 analyze_s0031.py
 debug_rego_extraction.py
 debug_s0011_rego.py
 debug_s0031_patterns.py
+debug_i0020464.py
 test_enhanced_parser_s0031.py
 test_enhanced_parser.py
 test_multiple_invoices.py
 test_pdf_parser.py
-tgm.xlsx
-asset_tracker/__pycache__/__init__.cpython-312.pyc
-asset_tracker/__pycache__/celery.cpython-311.pyc
-asset_tracker/__pycache__/celery.cpython-312.pyc
-asset_tracker/__pycache__/settings.cpython-311.pyc
-asset_tracker/__pycache__/settings.cpython-312.pyc
-asset_tracker/__pycache__/urls.cpython-312.pyc
-asset_tracker/__pycache__/wsgi.cpython-312.pyc
-invoices/214-koinonia-enterprises-pty-ltd.pdf
-invoices/invoice-A27021.pdf
-invoices/Tax Invoice S0017 Trailer .pdf
-invoices/Tax invoice S0024 Forklift Battery .pdf
-media/maintenance_docs/invoice-A25144.pdf
-templates/emails/odometer_update.txt
-templates/emails/service_overdue.txt
-templates/emails/service_reminder.txt
-tracking/CARS 22-11- 2024.xlsx
-tracking/IMPORT_DOCUMENTATION.md
-tracking/__pycache__/__init__.cpython-312.pyc
-tracking/__pycache__/admin.cpython-311.pyc
-tracking/__pycache__/admin.cpython-312.pyc
-tracking/__pycache__/apps.cpython-312.pyc
-tracking/__pycache__/excel_reader.cpython-312.pyc
-tracking/__pycache__/forms.cpython-311.pyc
-tracking/__pycache__/forms.cpython-312.pyc
-tracking/__pycache__/maintenance_service.cpython-312.pyc
-tracking/__pycache__/mixins.cpython-311.pyc
-tracking/__pycache__/mixins.cpython-312.pyc
-tracking/__pycache__/models.cpython-311.pyc
-tracking/__pycache__/models.cpython-312.pyc
-tracking/__pycache__/notifications.cpython-312.pyc
-tracking/__pycache__/pdf_invoice_parser.cpython-312.pyc
-tracking/__pycache__/signals.cpython-312.pyc
-tracking/__pycache__/urls.cpython-311.pyc
-tracking/__pycache__/urls.cpython-312.pyc
-tracking/__pycache__/views.cpython-311.pyc
-tracking/__pycache__/views.cpython-312.pyc
-tracking/management/All_New_Invoices_Tracker.csv
-tracking/management/All_New_Invoices_Tracker.xlsx
-tracking/management/user import.xlsx
-tracking/management/__pycache__/__init__.cpython-312.pyc
-tracking/management/commands/__pycache__/__init__.cpython-312.pyc
-tracking/management/commands/__pycache__/check_service_reminders.cpython-312.pyc
-tracking/management/commands/__pycache__/import_cars_excel.cpython-312.pyc
-tracking/management/commands/__pycache__/import_cars.cpython-312.pyc
-tracking/management/commands/__pycache__/import_koinonia_cars.cpython-312.pyc
-tracking/management/commands/__pycache__/import_maintenance.cpython-311.pyc
-tracking/management/commands/__pycache__/import_maintenance.cpython-312.pyc
-tracking/migrations/__pycache__/__init__.cpython-312.pyc
-tracking/migrations/__pycache__/0001_initial.cpython-312.pyc
-tracking/migrations/__pycache__/0002_alter_maintenance_fields.cpython-311.pyc
-tracking/migrations/__pycache__/0002_car_body_car_color_car_manufacturing_year_and_more.cpython-312.pyc
-tracking/migrations/__pycache__/0003_fuelrecord_tirerecord_alter_car_options_and_more.cpython-311.pyc
-tracking/migrations/__pycache__/0003_fuelrecord_tirerecord_alter_car_options_and_more.cpython-312.pyc
-tracking/migrations/__pycache__/0004_update_car_odometer_and_maintenance_qty.cpython-312.pyc
-tracking/templatetags/__pycache__/__init__.cpython-311.pyc
-tracking/templatetags/__pycache__/__init__.cpython-312.pyc
-tracking/templatetags/__pycache__/custom_filters.cpython-311.pyc
-tracking/templatetags/__pycache__/custom_filters.cpython-312.pyc
-tracking/templatetags/__pycache__/fleet_extras.cpython-311.pyc
-tracking/templatetags/__pycache__/fleet_extras.cpython-312.pyc
-asset_tracker/__pycache__/celery.cpython-311.pyc
-asset_tracker/__pycache__/settings.cpython-311.pyc
-tracking/__pycache__/admin.cpython-311.pyc
-tracking/__pycache__/forms.cpython-311.pyc
-tracking/__pycache__/mixins.cpython-311.pyc
-tracking/__pycache__/models.cpython-311.pyc
-tracking/__pycache__/urls.cpython-311.pyc
-tracking/__pycache__/views.cpython-311.pyc
-asset_tracker/__pycache__/celery.cpython-311.pyc
-asset_tracker/__pycache__/settings.cpython-311.pyc
-tracking/__pycache__/admin.cpython-311.pyc
-tracking/__pycache__/forms.cpython-311.pyc
-tracking/__pycache__/mixins.cpython-311.pyc
-tracking/__pycache__/models.cpython-311.pyc
-tracking/__pycache__/urls.cpython-311.pyc
-tracking/__pycache__/views.cpython-311.pyc
+
+# Local working artifacts
+/logs/
+/hero_lumpsum_insert.sql
+/maintenance_comparison_report.txt
+/missing_invoices.txt
+/export.xlsx
+/export1-5.xlsx
+/export2.xlsx
+/export kamal.xlsx
+/export_maintenance_items.xlsx
+/export maintenance table.xlsx
+/maintenance_export.xlsx
+/tracking car.xlsx
+/tgm.xlsx
+/Untitled-1.sqlite3-query

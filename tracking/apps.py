@@ -8,3 +8,4 @@ class TrackingConfig(AppConfig):
 
     def ready(self):
         import tracking.signals
+        import tracking.checks

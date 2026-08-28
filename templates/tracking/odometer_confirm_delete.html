@@ -16,11 +16,11 @@
         <form method="post">
             {% csrf_token %}
             <button type="submit" class="btn btn-danger">Delete</button>
-            <a href="{% url 'odometer-list' %}" class="btn btn-secondary">Cancel</a>
+            <a href="{% url 'odometer_list' %}" class="btn btn-secondary">Cancel</a>
         </form>
     {% else %}
         <p class="text-danger">You do not have permission to delete this odometer reading.</p>
-        <a href="{% url 'odometer-list' %}" class="btn btn-secondary">Back</a>
+        <a href="{% url 'odometer_list' %}" class="btn btn-secondary">Back</a>
     {% endif %}
 </div>
 {% endblock %}

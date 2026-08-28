@@ -1,63 +1,69 @@
 {% extends 'tracking/base.html' %}
+{% load custom_filters %}
 {% block title %}Admin Dashboard{% endblock %}
 
 {% block content %}
-<h2>Welcome, {{ user.get_full_name }}</h2>
-<p>This is your dashboard where you have full access to the system.</p>
+<div class="page-header">
+    <div>
+        <div class="page-eyebrow">Administration overview</div>
+        <h1>Welcome{% if user.get_full_name %}, {{ user.get_full_name }}{% endif %}</h1>
+        <p class="page-subtitle">Monitor the fleet and access the areas that need your attention.</p>
+    </div>
+    <a href="{% url 'fleet_analytics' %}" class="btn btn-primary"><i class="fas fa-chart-line me-1"></i> View analytics</a>
+</div>
 
-<div class="row">
-    <div class="col-md-3">
-        <div class="card text-white bg-success mb-3">
-            <div class="card-header">Tools</div>
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card metric-card" style="--metric:#059669;--metric-soft:#d1fae5">
             <div class="card-body">
-                <h5 class="card-title">{{ tools.count }} Tools</h5>
-                <p>Manage all tools across the system.</p>
-                <a href="{% url 'tool_list' %}" class="btn btn-light">View Tools</a>
+                <span class="metric-icon"><i class="fas fa-screwdriver-wrench"></i></span>
+                <div class="metric-value">{{ tool_count }}</div>
+                <div class="metric-label mb-3">Tools registered</div>
+                <a href="{% url 'tool_list' %}" class="metric-link">Manage tools <i class="fas fa-arrow-right ms-1"></i></a>
             </div>
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="card text-white bg-primary mb-3">
-            <div class="card-header">Cars</div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card metric-card" style="--metric:#2563eb;--metric-soft:#dbeafe">
             <div class="card-body">
-                <h5 class="card-title">{{ cars.count }} Cars</h5>
-                <p>Manage all cars across the system.</p>
-                <a href="{% url 'car_list' %}" class="btn btn-light">View Cars</a>
+                <span class="metric-icon"><i class="fas fa-car-side"></i></span>
+                <div class="metric-value">{{ car_count }}</div>
+                <div class="metric-label mb-3">Vehicles tracked</div>
+                <a href="{% url 'car_list' %}" class="metric-link">Manage vehicles <i class="fas fa-arrow-right ms-1"></i></a>
             </div>
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="card text-white bg-warning mb-3">
-            <div class="card-header">Users</div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card metric-card" style="--metric:#d97706;--metric-soft:#fef3c7">
             <div class="card-body">
-                <h5 class="card-title">{{ users.count }} Users</h5>
-                <p>Manage all users across the system.</p>
-                <a href="{% url 'user_list' %}" class="btn btn-light">View Users</a>
+                <span class="metric-icon"><i class="fas fa-users"></i></span>
+                <div class="metric-value">{{ user_count }}</div>
+                <div class="metric-label mb-3">Active accounts</div>
+                <a href="{% url 'user_list' %}" class="metric-link">Manage users <i class="fas fa-arrow-right ms-1"></i></a>
             </div>
         </div>
     </div>
 
-    <!-- Maintenance Card -->
-    <div class="col-md-3">
-        <div class="card text-white bg-info mb-3">
-            <div class="card-header">Maintenance</div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card metric-card" style="--metric:#7c3aed;--metric-soft:#ede9fe">
             <div class="card-body">
-                <h5 class="card-title">{{ maintenance_records.count }} Records</h5>
-                <p>Track all maintenance items and costs.</p>
-                <a href="{% url 'maintenance_list' %}" class="btn btn-light">View Maintenance</a>
+                <span class="metric-icon"><i class="fas fa-clipboard-check"></i></span>
+                <div class="metric-value">{{ maintenance_record_count }}</div>
+                <div class="metric-label mb-3">Maintenance records</div>
+                <a href="{% url 'maintenance_list' %}" class="metric-link">Review maintenance <i class="fas fa-arrow-right ms-1"></i></a>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Service Status Overview -->
-<div class="row mt-4">
+<div class="row">
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h4 class="mb-0"><i class="fa fa-tachometer-alt"></i> Fleet Service Status</h4>
+                <h4 class="mb-0"><i class="fa fa-gauge-high text-primary me-2"></i>Fleet service status</h4>
             </div>
             <div class="card-body">
                 {% if cars %}
@@ -77,7 +83,7 @@
                             </div>
                             <div class="card-body">
                                 <h6 class="card-title">{{ car.make }} {{ car.model }}</h6>
-                                <small class="text-muted">{{ car.assigned_user.get_full_name|default:"Unassigned" }}</small>
+                                <small class="text-muted">{{ car.assigned_user|user_display }}</small>
                                 <div class="row mt-2">
                                     <div class="col-6 text-center">
                                         <div class="h6 mb-0">{{ car.current_odometer|floatformat:0 }}</div>
@@ -107,7 +113,7 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="text-muted">No cars in the system.</p>
+                <div class="empty-state"><i class="fas fa-car-side fa-2x mb-3 d-block"></i>No vehicles are registered yet.</div>
                 {% endif %}
             </div>
         </div>

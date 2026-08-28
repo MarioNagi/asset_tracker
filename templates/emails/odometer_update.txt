@@ -1,0 +1,26 @@
+ODOMETER UPDATED - {{ car.rego }}
+
+Update Notification: The odometer reading for {{ car.rego }} has been updated by {{ updated_by.get_full_name|default:updated_by.username }}.
+
+Vehicle Information:
+- Vehicle: {{ car.make }} {{ car.model }}
+- Registration: {{ car.rego }}
+{% if car.assigned_user %}- Assigned to: {{ car.assigned_user.get_full_name }}{% endif %}
+- Updated by: {{ updated_by.get_full_name|default:updated_by.username }}
+
+Odometer Update:
+- Previous Reading: {{ old_odometer|floatformat:0 }} km
+- Current Reading: {{ new_odometer|floatformat:0 }} km
+- Kilometers Until Service: {{ km_until_service|floatformat:0 }} km
+
+{% if service_overdue %}
+🚨 SERVICE OVERDUE
+This vehicle is overdue for service and requires immediate attention.
+{% elif service_due_soon %}
+⚠️ SERVICE DUE SOON
+This vehicle is approaching its service interval. Please schedule service soon.
+{% endif %}
+
+---
+This is an automated notification from Koinonia Enterprises Asset Tracker.
+Please do not reply to this email.

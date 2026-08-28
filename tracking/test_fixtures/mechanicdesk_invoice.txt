@@ -1,0 +1,21 @@
+100 Example Road EXAMPLE AUTOMOTIVE
+Exampletown NSW 2000 ABN: 00000000000
+EXAMPLE MOTOR SERVICES
+& MECHANICAL REPAIRS
+BILL TO:
+TAX INVOICE
+Example Customer Pty Ltd
+Tax invoice number: TEST-1001
+Date : 15/04/2025
+KMs Make/Model Reg No. VIN
+231580.0 Example Utility ZZ00ZZ
+Description Qty. Unit Price Amount
+Battery
+Labour 0.3 $140.00 $42.00
+Carry out an anonymized battery test and replacement.
+New Battery 1.0 $279.40 $279.40
+Subtotal $321.40
+GST $32.14
+Total $353.54
+Paid $0.00
+Balance Due $353.54

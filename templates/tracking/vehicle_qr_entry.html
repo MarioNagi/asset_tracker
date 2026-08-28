@@ -1,0 +1,10 @@
+{% extends 'tracking/base.html' %}{% load crispy_forms_tags %}
+{% block title %}Update {{ car.rego }}{% endblock %}
+{% block content %}
+<div class="page-header"><div><div class="page-eyebrow">Vehicle QR</div><h1>{{ car.rego }}</h1><p class="page-subtitle">{{ car.make }} {{ car.model }} · Current record {{ car.current_odometer }} km</p></div></div>
+<div class="row g-4"><div class="col-lg-7"><div class="card"><div class="card-body">
+  {% if car.photo %}<img class="img-fluid rounded mb-3" style="max-height:260px" src="{% url 'car_photo' car.pk %}" alt="{{ car.rego }} vehicle photograph">{% endif %}
+  <div class="alert alert-info">Confirm the registration before entering anything. Scanning this QR does not change the vehicle custodian.</div>
+  <form method="post" enctype="multipart/form-data" novalidate>{% csrf_token %}{{ form|crispy }}<button class="btn btn-primary" type="submit">Submit vehicle update</button></form>
+</div></div></div><div class="col-lg-5"><div class="card"><div class="card-body"><h2 class="h5">Photo evidence</h2><p class="mb-0 text-muted">A fuel receipt photo is mandatory for fuel. A dashboard photo is requested only when the odometer is lower than the existing record or jumps by more than 5,000 km.</p></div></div></div></div>
+{% endblock %}

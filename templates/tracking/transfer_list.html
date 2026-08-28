@@ -1,36 +1,11 @@
 {% extends 'tracking/base.html' %}
-
-{% block title %}Transfers{% endblock %}
-
+{% block title %}Transfer Ledger{% endblock %}
 {% block content %}
-<div class="container mt-5">
-    <h2>Transfers</h2>
-    <a href="{% url 'transfer_add' %}" class="btn btn-primary mb-3">Add Transfer</a>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Transfer Type</th>
-                <th>Item</th>
-                <th>From User</th>
-                <th>To User</th>
-                <th>Date of Transfer</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for transfer in transfers %}
-            <tr>
-                <td>{{ transfer.transfer_type }}</td>
-                <td>{{ transfer.item_id }}</td>
-                <td>{{ transfer.from_user.get_full_name }}</td>
-                <td>{{ transfer.to_user.get_full_name }}</td>
-                <td>{{ transfer.date_of_transfer }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="5" class="text-center">No transfers found.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="container py-4">
+  <div class="page-header"><div><div class="page-eyebrow">Asset custody</div><h1>Transfer ledger</h1><p class="page-subtitle">A permanent record of every tool and vehicle movement.</p></div>{% if user.is_superuser or user.profile.access_level == 'Admin' %}<a href="{% url 'transfer_add' %}" class="btn btn-primary"><i class="fas fa-arrow-right-arrow-left me-1"></i> New transfer</a>{% endif %}</div>
+  <div class="table-responsive"><table class="table table-hover"><thead><tr><th>Date</th><th>From</th><th>To</th><th>Assets</th><th>Recorded by</th><th>Follow-up</th><th></th></tr></thead><tbody>
+  {% for transfer in transfers %}<tr><td>{{ transfer.date_of_transfer }}<div class="small text-muted">{{ transfer.reference|stringformat:'s'|slice:':8' }}</div></td><td>{{ transfer.source_label }}</td><td>{{ transfer.destination_label }}</td><td>{% for entry in transfer.entries.all %}<span class="badge text-bg-light border me-1">{{ entry.get_asset_type_display }} · {{ entry.asset_identifier }}</span>{% endfor %}</td><td>{{ transfer.created_by.get_full_name|default:transfer.created_by.username }}</td><td>{% for task in transfer.follow_up_tasks.all %}{% if task.completed %}<span class="badge text-bg-success">{{ task.state }} complete</span>{% else %}<span class="badge text-bg-warning">{{ task.state }} rego change</span>{% if user.is_superuser or user.profile.access_level == 'Admin' or task.assigned_to == user %}<a class="btn btn-sm btn-outline-secondary ms-1" href="{% url 'transfer_follow_up_task_edit' task.pk %}">Update</a>{% endif %}{% endif %}{% empty %}<span class="text-muted">None</span>{% endfor %}</td><td>{% if user.is_superuser or user.profile.access_level == 'Admin' %}{% if not transfer.reversal_of and not transfer.reversal %}<form method="post" action="{% url 'transfer_reverse' transfer.pk %}" onsubmit="return confirm('Create a reversal for this transfer?');">{% csrf_token %}<button class="btn btn-sm btn-outline-secondary" type="submit">Reverse</button></form>{% elif transfer.reversal_of %}<span class="badge text-bg-secondary">Reversal</span>{% else %}<span class="badge text-bg-secondary">Reversed</span>{% endif %}{% endif %}</td></tr>{% empty %}<tr><td colspan="7" class="text-center py-4">No custody transfers have been recorded yet.</td></tr>{% endfor %}
+  </tbody></table></div>
+  {% include 'tracking/_pagination.html' %}
 </div>
 {% endblock %}

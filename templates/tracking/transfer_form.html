@@ -1,14 +1,33 @@
 {% extends 'tracking/base.html' %}
-
-{% block title %}Add Transfer{% endblock %}
-
+{% load crispy_forms_tags %}
+{% block title %}New Transfer{% endblock %}
 {% block content %}
-<div class="container mt-5">
-    <h2>Add Transfer</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Save Transfer</button>
+<div class="container py-4">
+  <div class="page-header"><div><div class="page-eyebrow">Custody ledger</div><h1>New transfer</h1><p class="page-subtitle">Choose who currently holds the assets, then select one, many, or all of their tools.</p></div><a class="btn btn-secondary" href="{% url 'transfer_list' %}">Back to ledger</a></div>
+
+  <div class="card mb-4"><div class="card-body">
+    <h5>1. Select the current holder</h5>
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-md-5"><label class="form-label" for="source-user">From employee</label><select class="form-select" id="source-user" name="from_user"><option value="">Select employee</option>{% for account in users %}<option value="{{ account.pk }}" {% if source_user.pk == account.pk %}selected{% endif %}>{{ account.get_full_name|default:account.username }}</option>{% endfor %}</select></div>
+      <div class="col-md-5"><label class="form-label" for="source-location">Or from company location</label><select class="form-select" id="source-location" name="from_location"><option value="">Select office or warehouse</option>{% for location in locations %}<option value="{{ location.pk }}" {% if source_location.pk == location.pk %}selected{% endif %}>{{ location }}</option>{% endfor %}</select></div>
+      <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">Load assets</button></div>
     </form>
+  </div></div>
+
+  {% if source_user or source_location %}
+  <div class="card"><div class="card-body"><h5>2. Choose assets and destination</h5><form method="post">{% csrf_token %}{{ form|crispy }}<div class="d-flex gap-2"><button class="btn btn-primary" type="submit">Complete transfer</button><a class="btn btn-secondary" href="{% url 'transfer_add' %}">Start again</a></div></form></div></div>
+  {% endif %}
 </div>
+{% endblock %}
+{% block extra_js %}
+<script>
+  const sourceUser = document.getElementById('source-user');
+  const sourceLocation = document.getElementById('source-location');
+  sourceUser?.addEventListener('change', () => {
+    if (sourceUser.value) sourceLocation.value = '';
+  });
+  sourceLocation?.addEventListener('change', () => {
+    if (sourceLocation.value) sourceUser.value = '';
+  });
+</script>
 {% endblock %}

@@ -1,21 +1,20 @@
 # Django Framework and Core Dependencies
-Django==5.0.6
-django-environ==0.11.2
+Django==5.2.17
 
 # Database Drivers
-pymysql==1.1.0
+pymysql==1.2.0
 
 # Authentication and Authorization
-django-allauth==0.63.3
+django-allauth[mfa]==65.19.0
 
 # Form Enhancement
-django-crispy-forms==2.3
-crispy-bootstrap5==2024.10
-django-widget-tweaks==1.5.0
+django-crispy-forms==2.7
+crispy-bootstrap5==2026.3
+django-widget-tweaks==1.5.1
 
 # Admin Interface Enhancement
-django-admin-interface==0.28.8
-django-colorfield==0.11.0
+django-admin-interface==0.32.0
+django-colorfield==0.14.0
 
 # Data Processing and Excel/CSV Support
 pandas==2.2.2
@@ -23,45 +22,15 @@ xlsxwriter==3.2.0
 openpyxl==3.1.5
 
 # PDF Processing (for invoice parsing)
-pdfplumber>=0.7.0
-PyPDF2>=3.0.0
+pdfplumber==0.11.10
+pypdf==6.15.0
 
 # Celery for Background Tasks
 celery==5.3.4
-django-celery-beat==2.6.0
 redis==5.0.1  # Redis as message broker for Celery
 
 # File and Image Processing
-Pillow==10.4.0  # For ImageField support
-
-# Time and Date Handling
-python-dateutil==2.8.2
-pytz==2023.3
-
-# Development and Debugging (optional but recommended)
-django-debug-toolbar==4.2.0
-django-extensions==3.2.3
-
-# Testing (optional)
-pytest==7.4.2
-pytest-django==4.5.2
-factory-boy==3.3.0
+Pillow==12.3.0  # For ImageField support
 
 # Production Server (optional - for deployment)
-gunicorn==21.2.0
-whitenoise==6.5.0
-
-# Environment Variables
-python-dotenv==1.0.0
-
-# Email Backend (for production)
-django-ses==3.5.0
-
-# Logging and Monitoring (optional)
-sentry-sdk==1.32.0
-
-# API Support (if needed in future)
-djangorestframework==3.14.0
-
-# Security and CORS (if needed)
-django-cors-headers==4.3.1
+gunicorn==26.0.0

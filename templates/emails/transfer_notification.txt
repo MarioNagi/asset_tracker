@@ -1,0 +1,7 @@
+Transfer {{ batch.reference }} was completed from {{ batch.source_label }} to {{ batch.destination_label }}.
+
+Items:
+{% for entry in entries %}- {{ entry.get_asset_type_display }}: {{ entry.asset_identifier }}
+{% endfor %}
+
+{% if has_registration_task %}A vehicle crossed into {{ destination_state }}. Please arrange its registration change and complete the follow-up task in the asset tracker.{% endif %}

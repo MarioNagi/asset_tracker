@@ -1,58 +1,55 @@
 {% extends 'tracking/base.html' %}
-{% block title %}User Dashboard{% endblock %}
+{% block title %}My Dashboard{% endblock %}
 
 {% block content %}
-<h2>Welcome, {{ user.get_full_name }}</h2>
-<p>This is your dashboard where you can manage your assigned car.</p>
+<div class="page-header">
+    <div>
+        <div class="page-eyebrow">My fleet account</div>
+        <h1>Welcome{% if user.get_full_name %}, {{ user.get_full_name }}{% endif %}</h1>
+        <p class="page-subtitle">Keep your vehicle mileage current and stay ahead of upcoming service.</p>
+    </div>
+    <a href="{% url 'odometer_add' %}" class="btn btn-primary"><i class="fas fa-gauge-high me-1"></i> Add odometer reading</a>
+</div>
 
 {% if cars %}
     {% for car in cars %}
-    <div class="row">
-        <!-- Car Info Card -->
+    <div class="row g-3 mb-4">
         <div class="col-md-6">
-            <div class="card text-white bg-primary mb-3">
-                <div class="card-header">Your Car - {{ car.rego }}</div>
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Your vehicle</span><span class="badge bg-primary">{{ car.rego }}</span>
+                </div>
                 <div class="card-body">
-                    <h5 class="card-title">{{ car.make }} {{ car.model }}</h5>
-                    <p class="card-text">VIN: {{ car.vin_number }}</p>
-                    <a href="{% url 'odometer_add' %}" class="btn btn-light">Add Odometer Reading</a>
+                    <span class="metric-icon mb-3"><i class="fas fa-car-side"></i></span>
+                    <h2 class="h4">{{ car.make }} {{ car.model }}</h2>
+                    <p class="text-muted mb-0">VIN {{ car.vin_number|default:"Not recorded" }}</p>
+                    <div class="mt-3"><a class="btn btn-primary" href="{% url 'vehicle_qr_entry' car.qr_token %}">Enter fuel or weekly reading</a></div>
+                    <div class="small mt-2 {% if car.is_odometer_overdue %}text-danger{% else %}text-muted{% endif %}">Next reading due {{ car.odometer_due_date }}</div>
                 </div>
             </div>
         </div>
 
-        <!-- Odometer & Service Status Card -->
         <div class="col-md-6">
-            <div class="card mb-3 {% if car.is_service_due_by_km %}border-danger text-white bg-danger{% elif car.is_service_approaching %}border-warning bg-warning{% else %}border-success bg-light{% endif %}">
-                <div class="card-header">
-                    <i class="fa fa-tachometer-alt"></i> Service Status
-                </div>
+            <div class="card h-100 {% if car.is_service_due_by_km %}border-danger{% elif car.is_service_approaching %}border-warning{% else %}border-success{% endif %}">
+                <div class="card-header"><i class="fas fa-gauge-high text-primary me-2"></i>Service status</div>
                 <div class="card-body">
                     <div class="row text-center">
-                        <div class="col-6">
-                            <div class="h4 {% if car.is_service_due_by_km or car.is_service_approaching %}text-white{% else %}text-dark{% endif %}">{{ car.current_odometer|floatformat:0 }}</div>
-                            <small class="{% if car.is_service_due_by_km or car.is_service_approaching %}text-white-50{% else %}text-muted{% endif %}">Current KM</small>
+                        <div class="col-6 border-end">
+                            <div class="h4 mb-1">{{ car.current_odometer|floatformat:0 }}</div>
+                            <small class="text-muted">Current KM</small>
                         </div>
                         <div class="col-6">
-                            <div class="h4 {% if car.is_service_due_by_km or car.is_service_approaching %}text-white{% else %}text-dark{% endif %}">{{ car.service_odometer|floatformat:0 }}</div>
-                            <small class="{% if car.is_service_due_by_km or car.is_service_approaching %}text-white-50{% else %}text-muted{% endif %}">Service Due at</small>
+                            <div class="h4 mb-1">{{ car.service_odometer|floatformat:0 }}</div>
+                            <small class="text-muted">Service due at</small>
                         </div>
                     </div>
-                    <hr class="{% if car.is_service_due_by_km or car.is_service_approaching %}border-white-50{% else %}border-dark{% endif %}">
+                    <hr>
                     {% if car.is_service_due_by_km %}
-                        <div class="text-center">
-                            <strong class="text-white">⚠️ SERVICE OVERDUE</strong><br>
-                            <small class="text-white">{{ car.current_odometer|add:"-"|add:car.service_odometer|floatformat:0 }} km overdue</small>
-                        </div>
+                        <div class="text-center"><span class="badge bg-danger mb-2"><i class="fas fa-triangle-exclamation me-1"></i> Service overdue</span><br><small class="text-danger">{{ car.current_odometer|add:"-"|add:car.service_odometer|floatformat:0 }} km overdue</small></div>
                     {% elif car.is_service_approaching %}
-                        <div class="text-center">
-                            <strong class="text-white">🔔 SERVICE APPROACHING</strong><br>
-                            <small class="text-white">{{ car.km_until_service|floatformat:0 }} km remaining</small>
-                        </div>
+                        <div class="text-center"><span class="badge bg-warning text-dark mb-2"><i class="fas fa-bell me-1"></i> Service approaching</span><br><small class="text-warning">{{ car.km_until_service|floatformat:0 }} km remaining</small></div>
                     {% else %}
-                        <div class="text-center">
-                            <strong class="text-success">✅ SERVICE OK</strong><br>
-                            <small class="text-muted">{{ car.km_until_service|floatformat:0 }} km remaining</small>
-                        </div>
+                        <div class="text-center"><span class="badge bg-success mb-2"><i class="fas fa-check me-1"></i> Service on track</span><br><small class="text-muted">{{ car.km_until_service|floatformat:0 }} km remaining</small></div>
                     {% endif %}
                 </div>
             </div>
@@ -60,11 +57,8 @@
     </div>
     {% endfor %}
 {% else %}
-    <div class="card text-white bg-secondary mb-3">
-        <div class="card-header">Your Car</div>
-        <div class="card-body">
-            <p>No cars assigned to you.</p>
-        </div>
-    </div>
+    <div class="card"><div class="empty-state"><i class="fas fa-car-side fa-2x mb-3 d-block"></i><h2 class="h5">No vehicle assigned</h2><p class="mb-0">Contact your manager if you believe a vehicle should appear here.</p></div></div>
 {% endif %}
+<div class="card mt-4"><div class="card-header">My tools</div><div class="card-body">{% for tool in tools %}<a class="badge bg-light text-dark border text-decoration-none me-1 mb-1" href="{% url 'tool_detail' tool.pk %}">{{ tool.tool_name }} · {{ tool.internal_number }}</a>{% empty %}<span class="text-muted">No tools assigned.</span>{% endfor %}</div></div>
+{% if recent_qr_cars %}<div class="card mt-4"><div class="card-header">Recently scanned vehicles</div><div class="card-body">{% for car in recent_qr_cars %}<a class="btn btn-sm btn-secondary me-1 mb-1" href="{% url 'vehicle_qr_entry' car.qr_token %}">{{ car.rego }} · {{ car.make }} {{ car.model }}</a>{% endfor %}</div></div>{% endif %}
 {% endblock %}

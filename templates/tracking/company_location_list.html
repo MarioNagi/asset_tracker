@@ -1,0 +1,32 @@
+{% extends 'tracking/base.html' %}
+{% block title %}Company Locations{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="page-header">
+    <div><div class="page-eyebrow">Tools and custody</div><h1>Company locations</h1><p class="page-subtitle">Manage the offices and warehouses that hold company assets.</p></div>
+    <div class="d-flex gap-2"><a class="btn btn-secondary" href="{% url 'tool_list' %}">Tools</a>{% if user.is_superuser or user.profile.access_level == 'Admin' %}<a class="btn btn-primary" href="{% url 'company_location_add' %}"><i class="fas fa-plus me-1"></i> Add location</a>{% endif %}</div>
+  </div>
+
+  <div class="d-flex flex-wrap gap-2 mb-3">
+    <a class="btn btn-sm {% if request.GET.status == 'all' %}btn-primary{% else %}btn-outline-secondary{% endif %}" href="?status=all">All</a>
+    <a class="btn btn-sm {% if not request.GET.status or request.GET.status == 'active' %}btn-primary{% else %}btn-outline-secondary{% endif %}" href="?status=active">Active</a>
+    <a class="btn btn-sm {% if request.GET.type == 'office' %}btn-primary{% else %}btn-outline-secondary{% endif %}" href="?status=active&type=office">Offices</a>
+    <a class="btn btn-sm {% if request.GET.type == 'warehouse' %}btn-primary{% else %}btn-outline-secondary{% endif %}" href="?status=active&type=warehouse">Warehouses</a>
+    <a class="btn btn-sm {% if request.GET.status == 'inactive' %}btn-primary{% else %}btn-outline-secondary{% endif %}" href="?status=inactive">Inactive</a>
+  </div>
+
+  <div class="card filter-card"><div class="card-body"><form method="get" class="row g-3">
+    <input type="hidden" name="status" value="{{ request.GET.status|default:'active' }}">
+    <div class="col-md-4"><label class="form-label" for="location-q">Search</label><input class="form-control" id="location-q" name="q" value="{{ request.GET.q }}" placeholder="Name or address"></div>
+    <div class="col-md-3"><label class="form-label" for="location-type">Type</label><select class="form-select" id="location-type" name="type"><option value="">All types</option>{% for value, label in location_types %}<option value="{{ value }}" {% if request.GET.type == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+    {% if user.is_superuser or user.profile.access_level == 'Admin' %}<div class="col-md-3"><label class="form-label" for="location-state">State</label><select class="form-select" id="location-state" name="state"><option value="">All states</option>{% for value, label in states %}<option value="{{ value }}" {% if request.GET.state == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>{% endif %}
+    <div class="col-md-2 d-flex align-items-end"><button class="btn btn-primary w-100" type="submit">Apply</button></div>
+  </form></div></div>
+
+  <div class="table-responsive"><table class="table table-hover"><thead><tr><th>Location</th><th>Type</th><th>State</th><th>Responsible manager</th><th>Tools</th><th>Vehicles</th><th>Status</th><th></th></tr></thead><tbody>
+  {% for location in locations %}<tr><td><strong>{{ location.name }}</strong><div class="small text-muted">{{ location.address|truncatechars:60|default:'No address recorded' }}</div></td><td>{{ location.get_location_type_display }}</td><td>{{ location.state }}</td><td>{% if location.responsible_manager %}{{ location.responsible_manager.get_full_name|default:location.responsible_manager.username }}{% else %}<span class="text-muted">Not assigned</span>{% endif %}</td><td>{{ location.tool_count }}</td><td>{{ location.active_car_count }}</td><td><span class="badge {% if location.active %}text-bg-success{% else %}text-bg-secondary{% endif %}">{% if location.active %}Active{% else %}Inactive{% endif %}</span></td><td><a class="btn btn-sm btn-secondary" href="{% url 'company_location_detail' location.pk %}">View</a></td></tr>
+  {% empty %}<tr><td colspan="8" class="text-center py-4">No company locations match these filters.</td></tr>{% endfor %}
+  </tbody></table></div>
+  {% include 'tracking/_pagination.html' %}
+</div>
+{% endblock %}

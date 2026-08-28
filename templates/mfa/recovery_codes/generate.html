@@ -1,0 +1,22 @@
+{% extends "mfa/manage_base.html" %}
+
+{% block title %}Generate Recovery Codes{% endblock %}
+{% block mfa_title %}Generate Recovery Codes{% endblock %}
+{% block mfa_subtitle %}Replace the current emergency access codes.{% endblock %}
+
+{% block mfa_content %}
+<div class="card mfa-card">
+    <div class="card-body p-4">
+        {% if unused_code_count %}<div class="alert alert-warning">Generating a new set will immediately invalidate all {{ unused_code_count }} existing unused codes.</div>{% endif %}
+        <p>Confirm that you want to generate a fresh set of recovery codes.</p>
+        <form method="post" action="{% url 'mfa_generate_recovery_codes' %}">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="d-flex flex-column flex-sm-row gap-2 justify-content-end mfa-actions">
+                <a class="btn btn-outline-secondary" href="{% url 'mfa_index' %}">Cancel</a>
+                <button class="btn {% if unused_code_count %}btn-danger{% else %}btn-primary{% endif %}" type="submit">Generate codes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

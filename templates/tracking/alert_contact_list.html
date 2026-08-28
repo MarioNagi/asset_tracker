@@ -1,0 +1,18 @@
+{% extends 'tracking/base.html' %}
+{% block title %}Email Alerts{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="page-header"><div><div class="page-eyebrow">Users and security</div><h1>Email alerts</h1><p class="page-subtitle">Configure the shared mailboxes that receive operational alerts.</p></div><div class="d-flex flex-column flex-sm-row gap-2"><a class="btn btn-secondary" href="{% url 'notification_delivery_list' %}">Delivery history</a><a class="btn btn-primary" href="{% url 'alert_contact_add' %}"><i class="fas fa-plus me-1"></i> Add mailbox</a></div></div>
+  <div class="alert alert-info">Cross-state controlled-device alerts use exactly one primary State Manager from the origin and one from the destination. Project Managers use the State Manager responsibility.</div>
+  <div class="card filter-card"><div class="card-body"><form method="get" class="row g-3">
+    <div class="col-md-4"><label class="form-label" for="alert-role">Responsibility</label><select class="form-select" id="alert-role" name="responsibility"><option value="">All responsibilities</option>{% for value, label in responsibilities %}<option value="{{ value }}" {% if request.GET.responsibility == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+    <div class="col-md-3"><label class="form-label" for="alert-state">State</label><select class="form-select" id="alert-state" name="state"><option value="">All states</option>{% for value, label in states %}<option value="{{ value }}" {% if request.GET.state == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+    <div class="col-md-3"><label class="form-label" for="alert-enabled">Status</label><select class="form-select" id="alert-enabled" name="enabled"><option value="">All</option><option value="yes" {% if request.GET.enabled == 'yes' %}selected{% endif %}>Enabled</option><option value="no" {% if request.GET.enabled == 'no' %}selected{% endif %}>Disabled</option></select></div>
+    <div class="col-md-2 d-flex align-items-end"><button class="btn btn-primary w-100">Apply</button></div>
+  </form></div></div>
+  <div class="table-responsive"><table class="table table-hover"><thead><tr><th>Mailbox</th><th>Responsibility</th><th>State</th><th>Categories</th><th>Primary</th><th>Status</th><th>Last changed</th><th></th></tr></thead><tbody>
+  {% for contact in contacts %}<tr><td><strong>{{ contact.name }}</strong><div class="small text-muted">{{ contact.email }}</div></td><td>{{ contact.get_responsibility_display }}</td><td>{{ contact.state|default:'—' }}</td><td>{% for label in contact.category_labels %}<span class="badge text-bg-light border me-1 mb-1">{{ label }}</span>{% endfor %}</td><td>{% if contact.is_primary %}<span class="badge text-bg-primary">Primary</span>{% else %}—{% endif %}</td><td><span class="badge {% if contact.enabled %}text-bg-success{% else %}text-bg-secondary{% endif %}">{% if contact.enabled %}Enabled{% else %}Disabled{% endif %}</span></td><td>{{ contact.updated_at|date:'d M Y H:i' }}{% if contact.updated_by %}<div class="small text-muted">by {{ contact.updated_by.get_full_name|default:contact.updated_by.username }}</div>{% endif %}</td><td><a class="btn btn-sm btn-secondary" href="{% url 'alert_contact_edit' contact.pk %}">Edit</a></td></tr>{% empty %}<tr><td colspan="8" class="text-center py-4">No alert mailboxes configured.</td></tr>{% endfor %}
+  </tbody></table></div>
+  {% include 'tracking/_pagination.html' %}
+</div>
+{% endblock %}

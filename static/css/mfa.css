@@ -1,0 +1,102 @@
+.mfa-shell {
+    max-width: 920px;
+    margin: 0 auto 3rem;
+}
+
+.mfa-page-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.mfa-page-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    flex: 0 0 3rem;
+    border-radius: 0.9rem;
+    color: #fff;
+    background: linear-gradient(135deg, #0d6efd, #0a58ca);
+    box-shadow: 0 0.5rem 1.25rem rgba(13, 110, 253, 0.2);
+}
+
+.mfa-card {
+    border: 1px solid #e3e8ef;
+    border-radius: 1rem;
+    box-shadow: 0 0.5rem 1.5rem rgba(30, 41, 59, 0.08);
+    overflow: hidden;
+}
+
+.mfa-card + .mfa-card {
+    margin-top: 1rem;
+}
+
+.mfa-status-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 50%;
+}
+
+.mfa-qr {
+    display: block;
+    width: min(100%, 260px);
+    height: auto;
+    margin: 0 auto;
+    padding: 0.75rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.75rem;
+    background: #fff;
+}
+
+.mfa-secret {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    letter-spacing: 0.04em;
+}
+
+.mfa-auth-page {
+    min-height: 100vh;
+    background: #f4f7fb;
+}
+
+.mfa-auth-main {
+    min-height: calc(100vh - 57px);
+    display: grid;
+    place-items: center;
+    padding: 2rem 1rem;
+}
+
+.mfa-auth-card {
+    width: min(100%, 470px);
+}
+
+.mfa-code-input {
+    font-size: 1.25rem;
+    letter-spacing: 0.25em;
+    text-align: center;
+}
+
+.recovery-code-list {
+    min-height: 15rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    line-height: 1.7;
+}
+
+@media (max-width: 575.98px) {
+    .mfa-page-header {
+        align-items: flex-start;
+    }
+
+    .mfa-card .card-body {
+        padding: 1.1rem;
+    }
+
+    .mfa-actions .btn {
+        width: 100%;
+    }
+}

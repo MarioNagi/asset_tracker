@@ -1,0 +1,22 @@
+{% extends "mfa/entrance_base.html" %}
+
+{% block title %}Trust This Browser{% endblock %}
+{% block auth_title %}Trust this browser?{% endblock %}
+{% block auth_subtitle %}A trusted browser may skip verification on future sign-ins.{% endblock %}
+
+{% block auth_content %}
+<div class="alert alert-info"><i class="fas fa-circle-info me-2"></i>Only trust a private company device that other people cannot access.</div>
+<form method="post" action="{% url 'mfa_trust' %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="d-grid gap-2">
+        <button class="btn btn-primary" name="action" value="trust" type="submit">Trust this browser</button>
+        <button class="btn btn-outline-secondary" name="action" value="skip" type="submit">Do not trust</button>
+    </div>
+</form>
+<form method="post" action="{% url 'account_logout' %}" class="mt-2">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{% url 'account_login' %}">
+    <button class="btn btn-link text-secondary w-100" type="submit">Cancel sign in</button>
+</form>
+{% endblock %}

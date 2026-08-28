@@ -11,10 +11,24 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+from django.core.exceptions import ImproperlyConfigured
 from django.urls import reverse_lazy
-import pymysql
-pymysql.install_as_MySQLdb()
 import os
+
+# Deployment target presets. ``pythonanywhere`` switches off optional
+# infrastructure (Celery, Redis) that the platform does not expose and
+# applies PythonAnywhere-friendly security defaults. ``self_hosted`` keeps
+# the original strict defaults. Any other value falls back to the
+# self-hosted production posture.
+DEPLOYMENT_TARGET = os.getenv('DJANGO_DEPLOYMENT_TARGET', 'self_hosted').strip().lower()
+IS_PYTHONANYWHERE = DEPLOYMENT_TARGET == 'pythonanywhere'
+
+# MySQL is only used on the self-hosted MySQL configuration. Importing
+# PyMySQL at startup prevents the `mysqlclient` build dependency on
+# PythonAnywhere, which has no C compiler available.
+if os.getenv('DJANGO_DATABASE_ENGINE', 'sqlite').strip().lower() == 'mysql':
+    import pymysql  # noqa: E402
+    pymysql.install_as_MySQLdb()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,11 +37,32 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-ju#gs_*c*!36zuan$5578x8nj7-@4!hnr7-b9$^u)$7j$nq6&n"
+def env_bool(name, default=False):
+    """Read a boolean environment setting using common true values."""
+    return os.getenv(name, str(default)).strip().lower() in {'1', 'true', 'yes', 'on'}
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+
+def env_list(name, default=''):
+    """Read a comma-separated environment setting."""
+    return [value.strip() for value in os.getenv(name, default).split(',') if value.strip()]
+
+
+def required_env(name):
+    """Read a production secret/configuration value and fail with a clear name."""
+    value = os.getenv(name, '').strip()
+    if not value:
+        raise ImproperlyConfigured(f'{name} must be set for this configuration.')
+    return value
+
+
+# Development remains easy to start, while production must provide its own key.
+DEBUG = env_bool('DJANGO_DEBUG', True)
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = 'django-insecure-development-only-change-before-deployment'  # nosec B105
+    else:
+        raise ImproperlyConfigured('DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is false.')
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -37,14 +72,25 @@ LOGGING = {
         },
     },
     'loggers': {
-        '': {  # '' means root logger
+        '': {
             'handlers': ['console'],
-            'level': 'DEBUG',
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO').upper(),
+        },
+        'pdfminer': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'pypdf': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
         },
     },
 }
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env_list('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,[::1]')
+CSRF_TRUSTED_ORIGINS = env_list('DJANGO_CSRF_TRUSTED_ORIGINS')
 
 LOGIN_REDIRECT_URL = reverse_lazy('dashboard')  # Changed from account_login to dashboard
 LOGOUT_REDIRECT_URL = '/accounts/login/'
@@ -52,8 +98,12 @@ LOGIN_URL = '/accounts/login/'
 
 # Session settings
 SESSION_COOKIE_AGE = 86400  # 24 hours in seconds
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = env_bool('DJANGO_SESSION_EXPIRE_AT_BROWSER_CLOSE', True)
+SESSION_SAVE_EVERY_REQUEST = env_bool('DJANGO_SESSION_SAVE_EVERY_REQUEST', False)
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = os.getenv('DJANGO_SESSION_COOKIE_SAMESITE', 'Lax')
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = os.getenv('DJANGO_CSRF_COOKIE_SAMESITE', 'Lax')
 
 # Application definition
 
@@ -69,6 +119,7 @@ INSTALLED_APPS = [
     'crispy_bootstrap5',
     'allauth',
     'allauth.account',
+    'allauth.mfa',
     'allauth.socialaccount',
     'widget_tweaks',
     'admin_interface',
@@ -82,14 +133,35 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 # Django Allauth Settings
 SITE_ID = 1
+ACCOUNT_ADAPTER = 'tracking.adapters.ClosedAccountAdapter'
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
+# Authenticator-app 2FA is available to every account. Administrators and
+# managers must enroll before they can use the operational areas of the app.
+MFA_SUPPORTED_TYPES = ['totp', 'recovery_codes']
+MFA_TOTP_ISSUER = os.getenv('DJANGO_MFA_TOTP_ISSUER', 'Koinonia Asset Tracker')
+MFA_FORMS = {
+    'activate_totp': 'tracking.mfa_forms.StableActivateTOTPForm',
+}
+ACCOUNT_RATE_LIMITS = {
+    'login': '20/m/ip',
+    'login_failed': '10/m/ip,5/15m/key',
+    # These are rate-limit expressions, not credentials.
+    'reset_password': '10/m/ip,3/h/key',  # nosec B105
+    'reauthenticate': '10/m/user',
+    'change_password': '5/m/user',  # nosec B105
+}
+ASSET_TRACKER_MFA_REQUIRED_ROLES = {
+    role.lower()
+    for role in env_list('DJANGO_MFA_REQUIRED_ROLES', 'Admin,Manager')
+}
+
 # settings.py
 
-X_FRAME_OPTIONS = 'SAMEORIGIN'  # for admin interface
+X_FRAME_OPTIONS = os.getenv('DJANGO_X_FRAME_OPTIONS', 'DENY')
 
 ADMIN_INTERFACE_THEME = 'default'  # choose from default or other available themes
 
@@ -97,12 +169,14 @@ ADMIN_INTERFACE_THEME = 'default'  # choose from default or other available them
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "tracking.middleware.SecurityHeadersMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
-    "allauth.account.middleware.AccountMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "tracking.middleware.RequiredMFAMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
@@ -130,27 +204,39 @@ WSGI_APPLICATION = "asset_tracker.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+DATABASE_ENGINE = os.getenv('DJANGO_DATABASE_ENGINE', 'sqlite').strip().lower()
+if DATABASE_ENGINE == 'sqlite':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': Path(os.getenv('DJANGO_DATABASE_NAME', BASE_DIR / 'db.sqlite3')),
+            'OPTIONS': {'timeout': int(os.getenv('DJANGO_SQLITE_TIMEOUT', '20'))},
+        }
     }
-}
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'superadmin_fixedassetandfleet',
-#         'USER': 'superadmin_fleet',
-#         'PASSWORD': 'Mario@1236',
-#         'HOST': '216.7.88.27',
-#         'PORT': '3306',
-#         'OPTIONS': {
-#             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
-#         }
-#     }
-# }
-
+elif DATABASE_ENGINE == 'mysql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': required_env('DJANGO_DATABASE_NAME'),
+            'USER': required_env('DJANGO_DATABASE_USER'),
+            'PASSWORD': required_env('DJANGO_DATABASE_PASSWORD'),
+            'HOST': required_env('DJANGO_DATABASE_HOST'),
+            'PORT': os.getenv('DJANGO_DATABASE_PORT', '3306'),
+            'CONN_MAX_AGE': int(os.getenv('DJANGO_DATABASE_CONN_MAX_AGE', '60')),
+            'CONN_HEALTH_CHECKS': True,
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+                'connect_timeout': int(os.getenv('DJANGO_DATABASE_CONNECT_TIMEOUT', '10')),
+            },
+        }
+    }
+    mysql_ssl_ca = os.getenv('DJANGO_DATABASE_SSL_CA', '').strip()
+    if mysql_ssl_ca:
+        DATABASES['default']['OPTIONS']['ssl'] = {'ca': mysql_ssl_ca}
+else:
+    raise ImproperlyConfigured(
+        'DJANGO_DATABASE_ENGINE must be either "sqlite" or "mysql".'
+    )
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -161,6 +247,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 12},
     },
     {
         "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
@@ -176,11 +263,71 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = os.getenv('DJANGO_TIME_ZONE', 'Australia/Sydney')
 
 USE_I18N = True
 
 USE_TZ = True
+
+# Background reminders. Redis, a Celery worker, and Celery Beat are required
+# on the self-hosted target so scheduled registration, maintenance, calibration,
+# retirement, transfer follow-up, special-maintenance, and weekly-odometer
+# reminders continue to flow. On the PythonAnywhere target the broker and
+# worker are turned off; the ``run_scheduled_tasks`` management command
+# replaces Beat and is called from a PythonAnywhere scheduled task.
+USE_CELERY = env_bool(
+    'DJANGO_USE_CELERY',
+    not IS_PYTHONANYWHERE,
+)
+if USE_CELERY:
+    CELERY_BROKER_URL = os.getenv(
+        'CELERY_BROKER_URL', 'redis://127.0.0.1:6379/0'
+    )
+    CELERY_RESULT_BACKEND = os.getenv(
+        'CELERY_RESULT_BACKEND', 'redis://127.0.0.1:6379/1'
+    )
+    CELERY_TIMEZONE = TIME_ZONE
+    CELERY_ENABLE_UTC = True
+    CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+    CELERY_TASK_TRACK_STARTED = True
+    CELERY_TASK_SOFT_TIME_LIMIT = int(os.getenv('CELERY_TASK_SOFT_TIME_LIMIT', '240'))
+    CELERY_TASK_TIME_LIMIT = int(os.getenv('CELERY_TASK_TIME_LIMIT', '300'))
+    CELERY_RESULT_EXPIRES = int(os.getenv('CELERY_RESULT_EXPIRES', '86400'))
+    CELERY_TASK_ACKS_LATE = True
+    CELERY_TASK_REJECT_ON_WORKER_LOST = True
+    CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+else:
+    # The management command fallback expects the same names to be available
+    # so it can read configured timeouts without re-reading environment
+    # variables. They are inert while Celery is disabled.
+    CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', '')
+    CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', '')
+    CELERY_TIMEZONE = TIME_ZONE
+    CELERY_ENABLE_UTC = True
+    CELERY_TASK_SOFT_TIME_LIMIT = int(os.getenv('CELERY_TASK_SOFT_TIME_LIMIT', '240'))
+    CELERY_TASK_TIME_LIMIT = int(os.getenv('CELERY_TASK_TIME_LIMIT', '300'))
+    CELERY_RESULT_EXPIRES = int(os.getenv('CELERY_RESULT_EXPIRES', '86400'))
+
+cache_url = os.getenv('DJANGO_CACHE_URL', '').strip()
+if cache_url:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': cache_url,
+            'TIMEOUT': 300,
+        }
+    }
+else:
+    cache_location = os.getenv(
+        'DJANGO_CACHE_LOCATION',
+        'asset-tracker-pythonanywhere' if IS_PYTHONANYWHERE else 'asset-tracker-development',
+    )
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': cache_location,
+        }
+    }
 
 
 # Static files (CSS, JavaScript, Images)
@@ -188,22 +335,71 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = Path(os.getenv('DJANGO_STATIC_ROOT', BASE_DIR / 'staticfiles'))
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = Path(os.getenv('DJANGO_MEDIA_ROOT', BASE_DIR / 'media'))
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Email Backend Configuration
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.your-email-provider.com'
-EMAIL_PORT = 587
-EMAIL_HOST_USER = 'your-email@koinonia.com'
-EMAIL_HOST_PASSWORD = 'your-email-password'
-EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = 'Koinonia Enterprises <no-reply@koinonia.com>'
+# Email defaults to the console in development so reminder tests cannot
+# accidentally contact real recipients.
+EMAIL_BACKEND = os.getenv(
+    'DJANGO_EMAIL_BACKEND',
+    'django.core.mail.backends.console.EmailBackend' if DEBUG
+    else 'django.core.mail.backends.smtp.EmailBackend',
+)
+EMAIL_HOST = os.getenv('DJANGO_EMAIL_HOST', '')
+EMAIL_PORT = int(os.getenv('DJANGO_EMAIL_PORT', '587'))
+EMAIL_HOST_USER = os.getenv('DJANGO_EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('DJANGO_EMAIL_HOST_PASSWORD', '')
+EMAIL_USE_TLS = env_bool('DJANGO_EMAIL_USE_TLS', True)
+EMAIL_USE_SSL = env_bool('DJANGO_EMAIL_USE_SSL', False)
+EMAIL_TIMEOUT = int(os.getenv('DJANGO_EMAIL_TIMEOUT', '20'))
+DEFAULT_FROM_EMAIL = os.getenv(
+    'DJANGO_DEFAULT_FROM_EMAIL',
+    'Koinonia Enterprises <no-reply@koinonia.com>',
+)
+FLEET_MANAGER_EMAIL = os.getenv('DJANGO_FLEET_MANAGER_EMAIL', '')
+
+# Production security controls. Set these explicitly for the deployed site.
+# PythonAnywhere already terminates HTTPS in front of the web app, so
+# SECURE_SSL_REDIRECT, the secure-cookie flags, and the proxy header default
+# to safe values there even when DEBUG happens to be true.
+secure_default = not DEBUG or IS_PYTHONANYWHERE
+SECURE_SSL_REDIRECT = env_bool('DJANGO_SECURE_SSL_REDIRECT', secure_default)
+SESSION_COOKIE_SECURE = env_bool('DJANGO_SESSION_COOKIE_SECURE', secure_default)
+CSRF_COOKIE_SECURE = env_bool('DJANGO_CSRF_COOKIE_SECURE', secure_default)
+SECURE_HSTS_SECONDS = int(
+    os.getenv(
+        'DJANGO_SECURE_HSTS_SECONDS',
+        '31536000' if IS_PYTHONANYWHERE and not DEBUG else '0',
+    )
+)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool(
+    'DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS', IS_PYTHONANYWHERE and not DEBUG
+)
+SECURE_HSTS_PRELOAD = env_bool(
+    'DJANGO_SECURE_HSTS_PRELOAD', False
+)
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = os.getenv(
+    'DJANGO_SECURE_REFERRER_POLICY', 'strict-origin-when-cross-origin'
+)
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
+if env_bool('DJANGO_BEHIND_HTTPS_PROXY', IS_PYTHONANYWHERE):
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+CONTENT_SECURITY_POLICY = os.getenv(
+    'DJANGO_CONTENT_SECURITY_POLICY',
+    "default-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; "
+    "form-action 'self'; img-src 'self' data:; font-src 'self' data: "
+    "https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' "
+    "https://cdnjs.cloudflare.com; script-src 'self' 'unsafe-inline' "
+    "https://cdn.jsdelivr.net; connect-src 'self'",
+)
 
 
 # Redirect to login page after logout

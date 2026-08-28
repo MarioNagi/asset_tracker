@@ -1,0 +1,4 @@
+{% extends 'tracking/base.html' %}
+{% load crispy_forms_tags %}
+{% block title %}Update retirement task{% endblock %}
+{% block content %}<div class="container py-4"><div class="page-header"><div><div class="page-eyebrow">{{ object.car.rego }}</div><h1>{{ object.get_task_type_display }}</h1></div></div><div class="card"><div class="card-body"><form method="post">{% csrf_token %}{{ form|crispy }}<div class="d-flex gap-2"><button class="btn btn-primary" type="submit">Save task</button><a class="btn btn-secondary" href="{% url 'car_detail' object.car_id %}">Cancel</a></div></form></div></div></div>{% endblock %}

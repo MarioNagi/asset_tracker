@@ -4,14 +4,14 @@
 {% block title %}Add/Edit User{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2>{% if user.pk %}Edit{% else %}Add{% endif %} User</h2>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">
-            {% if user.pk %}Update{% else %}Create{% endif %}
-        </button>
-    </form>
+<div class="form-page">
+    <div class="page-header"><div><div class="page-eyebrow">Access management</div><h1>{% if form.instance.pk %}Edit user{% else %}Add user{% endif %}</h1><p class="page-subtitle">Manage company identity, role, region, and account access.</p></div></div>
+    <div class="card"><div class="card-body p-4">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="form-actions"><button type="submit" class="btn btn-primary"><i class="fas fa-user-check me-1"></i>{% if form.instance.pk %} Update user{% else %} Create user{% endif %}</button><a href="{% url 'user_list' %}" class="btn btn-secondary">Cancel</a></div>
+        </form>
+    </div></div>
 </div>
 {% endblock %}

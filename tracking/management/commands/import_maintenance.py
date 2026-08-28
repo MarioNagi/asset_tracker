@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from tracking.models import Car, Maintenance, MaintenanceItem
 from tracking.maintenance_service import MaintenanceInvoiceService, preview_pdf_invoice
+from tracking.invoice_utils import normalize_invoice_number
 from datetime import datetime
 import csv
 import os
@@ -11,7 +12,7 @@ class Command(BaseCommand):
     help = 'Import maintenance invoices from a CSV file'
 
     def add_arguments(self, parser):
-        parser.add_argument('input_file', type=str, help='Path to the CSV or PDF file')
+        parser.add_argument('input_path', type=str, help='Path to the CSV/PDF file or folder containing PDFs')
         parser.add_argument(
             '--dry-run',
             action='store_true',
@@ -33,40 +34,108 @@ class Command(BaseCommand):
             action='store_true',
             help='Skip existing maintenance records instead of updating them',
         )
+        parser.add_argument(
+            '--recursive',
+            action='store_true',
+            help='Process folders recursively (when input is a folder)',
+        )
 
     def handle(self, *args, **kwargs):
-        input_file = kwargs['input_file']
+        input_path = kwargs['input_path']
         dry_run = kwargs.get('dry_run', False)
         auto_create_car = kwargs.get('auto_create_car', False)
         file_type = kwargs.get('file_type', 'auto')
         skip_existing = kwargs.get('skip_existing', False)
+        recursive = kwargs.get('recursive', False)
         
         if dry_run:
             self.stdout.write('Performing dry run - no changes will be saved')
         
         self.stdout.write(f'Skip existing records: {skip_existing}')
         
+        # Check if input is a file or directory
+        if os.path.isfile(input_path):
+            # Single file processing
+            self._process_single_file(input_path, file_type, dry_run, auto_create_car, skip_existing)
+        elif os.path.isdir(input_path):
+            # Directory processing
+            self._process_directory(input_path, dry_run, auto_create_car, skip_existing, recursive)
+        else:
+            self.stdout.write(self.style.ERROR(f'Path {input_path} does not exist'))
+            return
+                
+        self.stdout.write(self.style.SUCCESS('Successfully processed all files'))
+    
+    def _process_single_file(self, file_path: str, file_type: str, dry_run: bool, auto_create_car: bool, skip_existing: bool):
+        """Process a single file"""
         # Determine file type
         if file_type == 'auto':
-            file_type = self._detect_file_type(input_file)
+            file_type = self._detect_file_type(file_path)
         
-        self.stdout.write(f'Processing {file_type.upper()} file: {input_file}')
+        self.stdout.write(f'Processing {file_type.upper()} file: {file_path}')
         
         try:
             if file_type == 'csv':
-                self._handle_csv(input_file, dry_run, skip_existing)
+                self._handle_csv(file_path, dry_run, skip_existing)
             elif file_type == 'pdf':
-                self._handle_pdf(input_file, dry_run, auto_create_car, skip_existing)
+                self._handle_pdf(file_path, dry_run, auto_create_car, skip_existing)
             else:
                 self.stdout.write(self.style.ERROR(f'Unsupported file type: {file_type}'))
                 return
                 
-            self.stdout.write(self.style.SUCCESS('Successfully processed file'))
-                
         except FileNotFoundError:
-            self.stdout.write(self.style.ERROR(f'File {input_file} not found'))
+            self.stdout.write(self.style.ERROR(f'File {file_path} not found'))
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f'Error processing file: {str(e)}'))
+            self.stdout.write(self.style.ERROR(f'Error processing file {file_path}: {str(e)}'))
+    
+    def _process_directory(self, dir_path: str, dry_run: bool, auto_create_car: bool, skip_existing: bool, recursive: bool):
+        """Process all PDF files in a directory"""
+        self.stdout.write(f'Processing directory: {dir_path} (recursive: {recursive})')
+        
+        pdf_files = []
+        
+        if recursive:
+            # Get all PDF files recursively
+            for root, dirs, files in os.walk(dir_path):
+                for file in files:
+                    if file.lower().endswith('.pdf'):
+                        pdf_files.append(os.path.join(root, file))
+        else:
+            # Get PDF files only in the specified directory
+            for file in os.listdir(dir_path):
+                file_path = os.path.join(dir_path, file)
+                if os.path.isfile(file_path) and file.lower().endswith('.pdf'):
+                    pdf_files.append(file_path)
+        
+        if not pdf_files:
+            self.stdout.write(self.style.WARNING(f'No PDF files found in {dir_path}'))
+            return
+        
+        self.stdout.write(f'Found {len(pdf_files)} PDF files to process')
+        
+        success_count = 0
+        error_count = 0
+        
+        for pdf_file in sorted(pdf_files):
+            relative_path = os.path.relpath(pdf_file, dir_path)
+            try:
+                self.stdout.write(f'\nProcessing: {relative_path}')
+                ok = self._handle_pdf(pdf_file, dry_run, auto_create_car, skip_existing)
+                if ok:
+                    success_count += 1
+                else:
+                    error_count += 1
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f'Error processing {relative_path}: {str(e)}'))
+                error_count += 1
+                continue
+        
+        # Summary
+        self.stdout.write(f'\nSUMMARY:')
+        self.stdout.write(f'Successfully processed: {success_count} files')
+        if error_count > 0:
+            self.stdout.write(f'Errors: {error_count} files')
+        self.stdout.write(f'Total files: {len(pdf_files)}')
     
     def _detect_file_type(self, file_path: str) -> str:
         """Auto-detect file type based on extension"""
@@ -87,14 +156,20 @@ class Command(BaseCommand):
             
             for row in reader:
                 self.stdout.write(f'Processing CSV row: {row}')
+                inv_key = normalize_invoice_number(row.get('Invoice No', ''))
+                if not inv_key:
+                    self.stdout.write(self.style.ERROR(
+                        'Skipping row: Invoice No is required and cannot be empty'
+                    ))
+                    continue
                 # If this is a new invoice
-                if current_invoice != row['Invoice No']:
+                if current_invoice != inv_key:
                     # Save previous invoice if exists
                     if current_invoice and items:
                         self._create_maintenance_record(items, dry_run, skip_existing)
                     
                     # Start new invoice
-                    current_invoice = row['Invoice No']
+                    current_invoice = inv_key
                     items = [row]
                 else:
                     # Add item to current invoice
@@ -105,11 +180,12 @@ class Command(BaseCommand):
                 self._create_maintenance_record(items, dry_run, skip_existing)
     
     def _handle_pdf(self, pdf_file: str, dry_run: bool, auto_create_car: bool, skip_existing: bool = False):
-        """Handle PDF file import"""
+        """Handle PDF file import. Returns True if import/preview succeeded, False otherwise."""
         if dry_run:
             # Preview the PDF data
             invoice_data = preview_pdf_invoice(pdf_file)
             if invoice_data:
+                invoice_data.invoice_number = normalize_invoice_number(invoice_data.invoice_number)
                 self.stdout.write('PDF Preview:')
                 self.stdout.write(f'  Invoice: {invoice_data.invoice_number}')
                 self.stdout.write(f'  Date: {invoice_data.date}')
@@ -128,8 +204,10 @@ class Command(BaseCommand):
                         self.stdout.write(f'  Would update: Invoice {invoice_data.invoice_number} already exists')
                 else:
                     self.stdout.write(f'  Would create: New invoice {invoice_data.invoice_number}')
+                return True
             else:
                 self.stdout.write(self.style.WARNING('Could not preview PDF data'))
+                return False
         else:
             # Actually import the PDF
             service = MaintenanceInvoiceService()
@@ -139,6 +217,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS(message))
             else:
                 self.stdout.write(self.style.ERROR(message))
+            return success
     
     def _parse_date(self, date_str):
         """Parse date from DD/MM/YYYY format"""
@@ -164,8 +243,13 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.ERROR(f'Car with rego {first_item["Rego"]} not found'))
                     return
 
-                invoice_number = first_item['Invoice No']
-                
+                invoice_number = normalize_invoice_number(first_item.get('Invoice No', ''))
+                if not invoice_number:
+                    self.stdout.write(self.style.ERROR(
+                        'Invoice No is required and cannot be empty for CSV import'
+                    ))
+                    return
+
                 if dry_run:
                     existing = Maintenance.objects.filter(invoice_number=invoice_number).exists()
                     if existing:
@@ -192,7 +276,7 @@ class Command(BaseCommand):
                     # Check if maintenance record already exists and skip if it does
                     if Maintenance.objects.filter(invoice_number=invoice_number).exists():
                         self.stdout.write(self.style.WARNING(
-                            f'⏭ Skipped: Maintenance record with invoice {invoice_number} already exists'
+                            f'Skipped: Maintenance record with invoice {invoice_number} already exists'
                         ))
                         return
                     
@@ -224,7 +308,7 @@ class Command(BaseCommand):
                     )
                 
                 action = 'Created' if created else 'Updated'
-                symbol = '✓' if created else '↻'
+                symbol = '+' if created else '~'
                 self.stdout.write(self.style.SUCCESS(
                     f'{symbol} {action} maintenance record for {car.rego} - Invoice {invoice_number} (${maintenance.total_cost})'
                 ))

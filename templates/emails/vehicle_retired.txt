@@ -1,0 +1,9 @@
+Vehicle {{ car.rego }} has been marked {{ car.get_status_display }} and moved to Vehicle History.
+
+Final amount received: ${{ car.final_value }}
+Payment date: {{ car.final_payment_date }}
+Payment source: {{ car.final_payment_source }}
+
+Please complete the following retirement tasks:
+{% for task_name in task_names %}- {{ task_name }}
+{% endfor %}

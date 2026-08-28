@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
+from django.db.models import Q
 from tracking.models import Car
 import pandas as pd
 import logging
@@ -183,16 +184,20 @@ class Command(BaseCommand):
                     if 'inv. date' in df.columns and pd.notna(row['inv. date']):
                         try:
                             car_data['purchase_date'] = pd.to_datetime(row['inv. date']).date()
-                        except:
-                            pass  # Skip if can't parse
+                        except (TypeError, ValueError, OverflowError) as exc:
+                            self.warn_omitted_field(
+                                index, row['Rego'], 'purchase date', exc
+                            )
 
                     # Handle purchase price
                     if 'purchase price' in df.columns and pd.notna(row['purchase price']):
                         try:
                             price_str = str(row['purchase price']).replace('$', '').replace(',', '')
                             car_data['purchase_price'] = float(price_str)
-                        except:
-                            pass  # Skip if can't parse
+                        except (TypeError, ValueError, OverflowError) as exc:
+                            self.warn_omitted_field(
+                                index, row['Rego'], 'purchase price', exc
+                            )
 
                     # Create or update car
                     car, created = Car.objects.update_or_create(
@@ -277,6 +282,17 @@ class Command(BaseCommand):
             else:
                 return "Unknown", description[:50] if description else "Unknown"
 
+    def warn_omitted_field(self, dataframe_index, rego, field_name, error):
+        """Report an optional import field that could not be parsed."""
+        row_number = dataframe_index + 2
+        safe_rego = str(rego).upper().strip()
+        message = (
+            f"Row {row_number} ({safe_rego}): invalid {field_name}; "
+            'the car will be imported without it.'
+        )
+        self.stdout.write(self.style.WARNING(message))
+        logger.warning('%s Parser error: %s', message, error)
+
     def find_user(self, driver_name):
         """Try to find a user by various name matching strategies"""
         if not driver_name:
@@ -303,15 +319,12 @@ class Command(BaseCommand):
                 pass
         
         # Try partial match on full name
-        try:
-            users = User.objects.filter(
-                models.Q(first_name__icontains=driver_name) | 
-                models.Q(last_name__icontains=driver_name) |
-                models.Q(username__icontains=driver_name)
-            )
-            if users.count() == 1:
-                return users.first()
-        except:
-            pass
+        users = User.objects.filter(
+            Q(first_name__icontains=driver_name) |
+            Q(last_name__icontains=driver_name) |
+            Q(username__icontains=driver_name)
+        )
+        if users.count() == 1:
+            return users.first()
         
         return None

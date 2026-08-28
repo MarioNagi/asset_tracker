@@ -1,4 +1,0 @@
-id,password,last_login,is_superuser,username,last_name,email,is_staff,is_active,date_joined,first_name
-1,pbkdf2_sha256$720000$DRKdSvDFXD9dRCXIISM1bI$eE+BLTcCI8MVZjmHqg1mB0iqMyLmjlCreeIZJVEYHx8=,2025-03-10 02:07:10.531556,1,admin,admin,Fixedassets@koinoniaenterprises.com.au,1,1,2021-06-29 06:00:00.000000,admin
-2,pbkdf2_sha256$720000$1x0lVCtVAXShAWTIsM5o3B$V/DI9UNDeT8gcfwAywQeJep32a4vYloDExv5s7NAjaE=,,0,emad_gad,Gad,emad.gad@koinoniaenterprises.com.au,0,1,2025-03-09 06:29:29.494310,Emad
-3,pbkdf2_sha256$720000$HyTcI7dbwiW79KJvtdxf9k$G8741UrLDbBijYwZfmiiPL6DWOwu7NHWZwBhH2NY63c=,,0,george_khalil,Khalil,george.khalil@koinoniaenterprises.com.au,0,1,2025-03-09 06:46:48.865509,George

@@ -1,0 +1,22 @@
+{% extends "mfa/manage_base.html" %}
+
+{% block title %}Deactivate Authenticator App{% endblock %}
+{% block mfa_title %}Deactivate Authenticator App{% endblock %}
+{% block mfa_subtitle %}This reduces account protection and should only be done intentionally.{% endblock %}
+
+{% block mfa_content %}
+<div class="card mfa-card border-danger">
+    <div class="card-body p-4">
+        <div class="alert alert-danger"><i class="fas fa-triangle-exclamation me-2"></i>You are about to remove authenticator-app protection from this account.</div>
+        <p>After deactivation, privileged accounts will be required to enroll again before accessing operational pages.</p>
+        <form method="post" action="{% url 'mfa_deactivate_totp' %}">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="d-flex flex-column flex-sm-row gap-2 justify-content-end mfa-actions">
+                <a class="btn btn-outline-secondary" href="{% url 'mfa_index' %}">Keep active</a>
+                <button class="btn btn-danger" type="submit">Deactivate</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

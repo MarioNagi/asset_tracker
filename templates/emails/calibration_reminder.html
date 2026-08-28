@@ -1,6 +1,6 @@
 Dear {{ tool.assigned_user.get_full_name }},
 
-This is a reminder that the calibration for tool {{ tool.name }} (Serial Number: {{ tool.serial_number }}) is due on {{ tool.calibration_date }}.
+This is a reminder that the calibration for tool {{ tool.tool_name }} (Serial Number: {{ tool.serial_number|default:"N/A" }}) is due on {{ tool.calibration_date }}.
 
 Please ensure that the necessary calibration is performed before the due date.
 

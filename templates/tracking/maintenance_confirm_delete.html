@@ -1,0 +1,18 @@
+{% extends 'tracking/base.html' %}
+
+{% block title %}Delete Maintenance Record{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Delete Maintenance Record</h2>
+    <p>
+        Are you sure you want to delete the maintenance record for
+        <strong>{{ object.car.rego }}</strong> dated {{ object.service_date }}?
+    </p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Delete</button>
+        <a href="{% url 'maintenance_list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}
